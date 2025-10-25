@@ -2,6 +2,7 @@ package gg.moonflower.molangcompiler.impl.node;
 
 import gg.moonflower.molangcompiler.api.MolangEnvironment;
 import gg.moonflower.molangcompiler.api.MolangExpression;
+import gg.moonflower.molangcompiler.api.MolangValue;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Objects;
@@ -13,14 +14,14 @@ import java.util.function.Supplier;
 @ApiStatus.Internal
 public class MolangLazyNode implements MolangExpression {
 
-    private final Supplier<Float> value;
+    private final Supplier<MolangValue> value;
 
-    public MolangLazyNode(Supplier<Float> value) {
+    public MolangLazyNode(Supplier<MolangValue> value) {
         this.value = new Supplier<>() {
-            private Float result = null;
+            private MolangValue result = null;
 
             @Override
-            public Float get() {
+            public MolangValue get() {
                 if (this.result == null) {
                     this.result = value.get();
                 }
@@ -30,13 +31,13 @@ public class MolangLazyNode implements MolangExpression {
     }
 
     @Override
-    public float get(MolangEnvironment environment) {
+    public MolangValue get(MolangEnvironment environment) {
         return this.value.get();
     }
 
     @Override
     public String toString() {
-        return Float.toString(this.value.get());
+        return this.value.get().toString();
     }
 
     @Override

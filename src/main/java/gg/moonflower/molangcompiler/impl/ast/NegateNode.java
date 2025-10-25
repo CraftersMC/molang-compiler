@@ -1,5 +1,6 @@
 package gg.moonflower.molangcompiler.impl.ast;
 
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
 import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
@@ -33,35 +34,21 @@ public record NegateNode(Node value) implements Node {
     }
 
     @Override
-    public float evaluate(MolangBytecodeEnvironment environment) throws MolangException {
-        return this.value.evaluate(environment) == 0.0F ? 1.0F : 0.0F;
+    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+        return this.value.evaluate(environment).negate();
     }
 
     @Override
     public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
         if (environment.optimize() && this.isConstant()) {
-            BytecodeCompiler.writeFloatConst(method, this.evaluate(environment));
+            BytecodeCompiler.writeConst(method, this.evaluate(environment));
             return;
         }
 
-        Label label_right = new Label();
-        Label label_end = new Label();
-
         this.value.writeBytecode(method, environment, breakLabel, continueLabel);
-        method.visitInsn(Opcodes.FCONST_0);
-        method.visitInsn(Opcodes.FCMPL);
-
-        //value ?
-        method.visitJumpInsn(Opcodes.IFEQ, label_right);
-
-        // 1
-        method.visitInsn(Opcodes.FCONST_1);
-        method.visitJumpInsn(Opcodes.GOTO, label_end);
-
-        //: 0
-        method.visitLabel(label_right);
-        method.visitInsn(Opcodes.FCONST_0);
-
-        method.visitLabel(label_end);
+        BytecodeCompiler.writeNegate(
+                method, environment, breakLabel, continueLabel,
+                value
+        );
     }
 }

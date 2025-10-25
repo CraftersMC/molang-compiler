@@ -1,5 +1,6 @@
 package gg.moonflower.molangcompiler.api.bridge;
 
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangRuntimeException;
 
 /**
@@ -12,13 +13,14 @@ import gg.moonflower.molangcompiler.api.exception.MolangRuntimeException;
 public interface MolangJavaFunction {
 
     /**
-     * Resolves a float from a set of parameters.
+     * Resolves a value from a set of parameters.
      *
      * @param context The parameters to execute using
-     * @return The resulting float value
+     * @return The resulting value
      * @throws MolangRuntimeException If any error occurs
+     * @since 4.0.0
      */
-    float resolve(Context context) throws MolangRuntimeException;
+    MolangValue resolve(Context context) throws MolangRuntimeException;
 
     /**
      * Provides parameters for MoLang Java functions.
@@ -26,16 +28,17 @@ public interface MolangJavaFunction {
      * @author Ocelot
      * @since 1.0.0
      */
-    record Context(float[] parameters) {
+    record Context(MolangValue[] parameters) {
 
         /**
-         * Resolves the specified parameter.
+         * Resolves the specified parameter as a MolangValue.
          *
          * @param parameter The parameter to resolve
-         * @return The float result of that parameter
+         * @return The MolangValue result of that parameter
          * @throws MolangRuntimeException If the expression could not be resolved
+         * @since 3.2.0
          */
-        public float get(int parameter) throws MolangRuntimeException {
+        public MolangValue get(int parameter) throws MolangRuntimeException {
             if (parameter < 0 || parameter >= this.parameters.length) {
                 throw new MolangRuntimeException("Invalid parameter: " + parameter);
             }

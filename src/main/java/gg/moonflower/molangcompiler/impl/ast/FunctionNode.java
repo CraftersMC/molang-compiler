@@ -67,25 +67,25 @@ public record FunctionNode(String object, String function, Node... arguments) im
             if (full) {
                 method.visitInsn(Opcodes.SWAP);
             } else {
-                BytecodeCompiler.writeFloatConst(method, node.evaluate(environment));
+                BytecodeCompiler.writeConst(method, node.evaluate(environment));
             }
             method.visitMethodInsn(
                     Opcodes.INVOKEINTERFACE,
                     "gg/moonflower/molangcompiler/api/MolangEnvironment",
                     "loadParameter",
-                    "(F)V",
+                    "(Lgg/moonflower/molangcompiler/api/MolangValue;)V",
                     true
             );
         }
 
-        // Resolve Function
+        // Resolve Function (call getAsFloat instead of deprecated resolve)
         method.visitVarInsn(Opcodes.ALOAD, expressionIndex);
         method.visitVarInsn(Opcodes.ALOAD, BytecodeCompiler.RUNTIME_INDEX);
         method.visitMethodInsn(
                 Opcodes.INVOKEINTERFACE,
                 "gg/moonflower/molangcompiler/api/MolangExpression",
-                "resolve",
-                "(Lgg/moonflower/molangcompiler/api/MolangEnvironment;)F",
+                "get",
+                "(Lgg/moonflower/molangcompiler/api/MolangEnvironment;)Lgg/moonflower/molangcompiler/api/MolangValue;",
                 true
         );
 

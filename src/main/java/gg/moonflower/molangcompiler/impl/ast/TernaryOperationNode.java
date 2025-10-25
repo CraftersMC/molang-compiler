@@ -1,6 +1,8 @@
 package gg.moonflower.molangcompiler.impl.ast;
 
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
 import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
@@ -9,24 +11,24 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
 
 /**
- * Performs an "if" check on the specified value and chooses a branch.
+ * Performs an "if" check on the specified condition and chooses a branch.
  *
- * @param value The value to check. If not zero it is considered <code>true</code>
- * @param left  The value to use when true
- * @param right The value to use when false
+ * @param condition The condition to check. If not zero it is considered <code>true</code>
+ * @param left  The condition to use when true
+ * @param right The condition to use when false
  * @author Buddy
  */
 @ApiStatus.Internal
-public record TernaryOperationNode(Node value, Node left, Node right) implements Node {
+public record TernaryOperationNode(Node condition, Node left, Node right) implements Node {
 
     @Override
     public String toString() {
-        return this.value + " ? " + this.left + " : " + this.right;
+        return this.condition + " ? " + this.left + " : " + this.right;
     }
 
     @Override
     public boolean isConstant() {
-        return this.value.isConstant();
+        return this.condition.isConstant();
     }
 
     @Override
@@ -35,8 +37,8 @@ public record TernaryOperationNode(Node value, Node left, Node right) implements
     }
 
     @Override
-    public float evaluate(MolangBytecodeEnvironment environment) throws MolangException {
-        return this.value.evaluate(environment) != 0.0F ? this.left.evaluate(environment) : this.right.evaluate(environment);
+    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+        return this.condition.evaluate(environment).asBoolean() ? this.left.evaluate(environment) : this.right.evaluate(environment);
     }
 
     @Override
@@ -44,8 +46,8 @@ public record TernaryOperationNode(Node value, Node left, Node right) implements
         Label label_right = new Label();
         Label label_end = new Label();
 
-        if (environment.optimize() && this.value.isConstant()) {
-            if (this.value.evaluate(environment) != 0.0F) {
+        if (environment.optimize() && this.condition.isConstant()) {
+            if (this.condition.evaluate(environment).asBoolean()) {
                 this.left.writeBytecode(method, environment, breakLabel, continueLabel);
                 if (this.left.hasValue() && !this.hasValue()) {
                     method.visitInsn(Opcodes.POP);
@@ -59,11 +61,8 @@ public record TernaryOperationNode(Node value, Node left, Node right) implements
             return;
         }
 
-        this.value.writeBytecode(method, environment, breakLabel, continueLabel);
-        method.visitInsn(Opcodes.FCONST_0);
-        method.visitInsn(Opcodes.FCMPL);
-
-        //value ?
+        this.condition.writeBytecode(method, environment, breakLabel, continueLabel);
+        BytecodeCompiler.unwrapBool(method);
         method.visitJumpInsn(Opcodes.IFEQ, label_right);
 
         // [left]

@@ -20,53 +20,28 @@ import java.util.function.Supplier;
 public interface MolangExpression {
 
     MolangExpression ZERO = of(0);
+    MolangExpression NULL = of(MolangValue.ofNull());
 
     /**
-     * Resolves the float value of this expression.
+     * Resolves the value of this expression.
      *
      * @param environment The environment to execute in
      * @return The resulting value
      * @throws MolangRuntimeException If any error occurs when resolving the value
+     * @since 4.0.0
      */
     @ApiStatus.Internal
-    float get(MolangEnvironment environment) throws MolangRuntimeException;
+    MolangValue get(MolangEnvironment environment) throws MolangRuntimeException;
 
     /**
-     * Resolves the constant float value of this expression if {@link #isConstant()} returns <code>true</code>.
+     * Resolves the constant value of this expression if {@link #isConstant()} returns <code>true</code>.
      *
      * @return The constant value backing this expression
      * @throws UnsupportedOperationException If this expression is not considered constant and cannot be resolved without an environment
-     * @since 3.1.0
+     * @since 4.0.0
      */
-    default float getConstant() throws UnsupportedOperationException {
+    default MolangValue getConstant() throws UnsupportedOperationException {
         throw new UnsupportedOperationException("Expression is not constant");
-    }
-
-    /**
-     * Resolves the float value of this expression.
-     *
-     * @param environment The environment to execute in
-     * @return The resulting value
-     * @throws MolangRuntimeException If any error occurs when resolving the value
-     * @deprecated Use {@link MolangEnvironment#resolve(MolangExpression)}
-     */
-    @Deprecated
-    @ApiStatus.ScheduledForRemoval(inVersion = "4.0.0")
-    default float resolve(MolangEnvironment environment) throws MolangRuntimeException {
-        return environment.resolve(this);
-    }
-
-    /**
-     * Resolves the float value of this expression. Catches any exception thrown and returns <code>0.0</code>.
-     *
-     * @param environment The environment to execute in
-     * @return The resulting value
-     * @deprecated Use {@link MolangEnvironment#safeResolve(MolangExpression)}
-     */
-    @Deprecated
-    @ApiStatus.ScheduledForRemoval(inVersion = "4.0.0")
-    default float safeResolve(MolangEnvironment environment) {
-        return environment.safeResolve(this);
     }
 
     /**
@@ -77,19 +52,6 @@ public interface MolangExpression {
      */
     default boolean isConstant() {
         return false;
-    }
-
-    /**
-     * Creates a copy of this expression if there is an internal state.
-     *
-     * @return A copy of this expression that has a unique internal state
-     * @since 3.0.0
-     * @deprecated Use {@link MolangExpression#createCopy()}
-     */
-    @Deprecated
-    @ApiStatus.ScheduledForRemoval(inVersion = "4.0.0")
-    default MolangExpression getCopy() {
-        return this.createCopy();
     }
 
     /**
@@ -109,7 +71,7 @@ public interface MolangExpression {
      * @return A new expression with that value
      */
     static MolangExpression of(float value) {
-        return new MolangConstantNode(value);
+        return new MolangConstantNode(MolangValue.of(value));
     }
 
     /**
@@ -119,7 +81,27 @@ public interface MolangExpression {
      * @return A new expression with that value
      */
     static MolangExpression of(boolean value) {
-        return new MolangConstantNode(value ? 1.0F : 0.0F);
+        return new MolangConstantNode(MolangValue.of(value));
+    }
+
+    /**
+     * Creates a {@link MolangExpression} of the specified value.
+     *
+     * @param value The value to represent as an expression
+     * @return A new expression with that value
+     */
+    static MolangExpression of(MolangValue value) {
+        return new MolangConstantNode(value);
+    }
+
+    /**
+     * Creates a {@link MolangExpression} of the specified value.
+     *
+     * @param value The value to represent as an expression
+     * @return A new expression with that value
+     */
+    static MolangExpression of(String value) {
+        return new MolangConstantNode(MolangValue.of(value));
     }
 
     /**
@@ -128,7 +110,7 @@ public interface MolangExpression {
      * @param value The value to represent as an expression
      * @return A new expression with that value
      */
-    static MolangExpression of(Supplier<Float> value) {
+    static MolangExpression of(Supplier<MolangValue> value) {
         return new MolangDynamicNode(value);
     }
 
@@ -138,7 +120,7 @@ public interface MolangExpression {
      * @param value The value to represent as an expression
      * @return A new expression with that value
      */
-    static MolangExpression lazy(Supplier<Float> value) {
+    static MolangExpression lazy(Supplier<MolangValue> value) {
         return new MolangLazyNode(value);
     }
 
@@ -172,7 +154,7 @@ public interface MolangExpression {
      * @return A new expression with that value
      */
     static MolangExpression of(BooleanSupplier value) {
-        return new MolangDynamicNode(() -> value.getAsBoolean() ? 1.0F : 0.0F);
+        return new MolangDynamicNode(() -> MolangValue.of(value.getAsBoolean()));
     }
 
     /**
@@ -182,7 +164,7 @@ public interface MolangExpression {
      * @return A new expression with that value
      */
     static MolangExpression lazy(BooleanSupplier value) {
-        return new MolangLazyNode(() -> value.getAsBoolean() ? 1.0F : 0.0F);
+        return new MolangLazyNode(() -> MolangValue.of(value.getAsBoolean()));
     }
 
     /**

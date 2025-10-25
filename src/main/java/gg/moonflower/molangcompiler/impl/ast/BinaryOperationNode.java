@@ -1,13 +1,12 @@
 package gg.moonflower.molangcompiler.impl.ast;
 
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
-import gg.moonflower.molangcompiler.api.exception.MolangSyntaxException;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
 import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
-import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
 
 /**
@@ -36,10 +35,9 @@ public record BinaryOperationNode(BinaryOperation operator, Node left, Node righ
         return true;
     }
 
-    @Override
-    public float evaluate(MolangBytecodeEnvironment environment) throws MolangException {
-        float left = this.left.evaluate(environment);
-        float right = this.right.evaluate(environment);
+    private float evaluateFloat(MolangBytecodeEnvironment environment) throws MolangException {
+        float left = this.left.evaluate(environment).asFloat();
+        float right = this.right.evaluate(environment).asFloat();
         return switch (this.operator) {
             case ADD -> left + right;
             case SUBTRACT -> left - right;
@@ -59,158 +57,36 @@ public record BinaryOperationNode(BinaryOperation operator, Node left, Node righ
     }
 
     @Override
+    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+        MolangValue leftValue = this.left.evaluate(environment);
+        MolangValue rightValue = this.right.evaluate(environment);
+
+        // For string comparisons, handle EQUALS and NOT_EQUALS specially
+        if ((this.operator == BinaryOperation.EQUALS || this.operator == BinaryOperation.NOT_EQUALS) &&
+            (leftValue.isString() || rightValue.isString())) {
+            boolean equal;
+            if (leftValue.isString() && rightValue.isString()) {
+                equal = leftValue.getString().equals(rightValue.getString());
+            } else {
+                // If types don't match, they're not equal
+                equal = false;
+            }
+            float result = (this.operator == BinaryOperation.EQUALS) ? (equal ? 1.0F : 0.0F) : (equal ? 0.0F : 1.0F);
+            return MolangValue.of(result);
+        }
+
+        // For all other operations, use float arithmetic
+        return MolangValue.of(this.evaluateFloat(environment));
+    }
+
+    @Override
     public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        if (environment.optimize()) {
-            if (this.isConstant()) {
-                BytecodeCompiler.writeFloatConst(method, this.evaluate(environment));
-                return;
-            }
+        if (environment.optimize() && this.isConstant()) {
+            BytecodeCompiler.writeConst(method, this.evaluate(environment));
+            return;
         }
-
-        switch (this.operator) {
-            case AND -> {
-                Label label_false = new Label();
-                Label label_end = new Label();
-                writeNode(this.left, method, environment, breakLabel, continueLabel);
-                //left == 0: goto false
-                method.visitInsn(Opcodes.FCONST_0);
-                method.visitInsn(Opcodes.FCMPL);
-                method.visitJumpInsn(Opcodes.IFEQ, label_false);
-
-                //right == 0: goto false
-                writeNode(this.right, method, environment, breakLabel, continueLabel);
-                method.visitInsn(Opcodes.FCONST_0);
-                method.visitInsn(Opcodes.FCMPL);
-                method.visitJumpInsn(Opcodes.IFEQ, label_false);
-
-                //else: true
-                method.visitInsn(Opcodes.FCONST_1);
-                method.visitJumpInsn(Opcodes.GOTO, label_end);
-
-                //false:
-                method.visitLabel(label_false);
-                method.visitInsn(Opcodes.FCONST_0);
-
-                //end:
-                method.visitLabel(label_end);
-            }
-            case OR -> {
-                Label label_true = new Label();
-                Label label_end = new Label();
-                //left != 0: goto true
-                writeNode(this.left, method, environment, breakLabel, continueLabel);
-                method.visitInsn(Opcodes.FCONST_0);
-                method.visitInsn(Opcodes.FCMPL);
-                method.visitJumpInsn(Opcodes.IFNE, label_true);
-
-                //right != 0: goto true
-                writeNode(this.right, method, environment, breakLabel, continueLabel);
-                method.visitInsn(Opcodes.FCONST_0);
-                method.visitInsn(Opcodes.FCMPL);
-                method.visitJumpInsn(Opcodes.IFNE, label_true);
-
-                //else: false
-                method.visitInsn(Opcodes.FCONST_0);
-                method.visitJumpInsn(Opcodes.GOTO, label_end);
-
-                //true:
-                method.visitLabel(label_true);
-                method.visitInsn(Opcodes.FCONST_1);
-
-                //end:
-                method.visitLabel(label_end);
-            }
-            case NULL_COALESCING -> {
-                if (!(this.left instanceof VariableGetNode lookup)) {
-                    throw new MolangSyntaxException("Expected variable lookup, got " + this.left);
-                }
-
-                // Test if variable exists
-                environment.loadObjectHas(method, lookup.object(), lookup.name());
-
-                // Run branches
-                Label label_false = new Label();
-                Label label_end = new Label();
-                method.visitJumpInsn(Opcodes.IFEQ, label_false);
-                writeNode(this.left, method, environment, breakLabel, continueLabel);
-                method.visitJumpInsn(Opcodes.GOTO, label_end);
-                method.visitLabel(label_false);
-                writeNode(this.right, method, environment, breakLabel, continueLabel);
-                method.visitLabel(label_end);
-            }
-            case MULTIPLY -> {
-                if (environment.optimize() && this.tryWriteNegate(method, environment, breakLabel, continueLabel)) {
-                    return;
-                }
-
-                writeNode(this.left, method, environment, breakLabel, continueLabel);
-                writeNode(this.right, method, environment, breakLabel, continueLabel);
-                method.visitInsn(Opcodes.FMUL);
-            }
-            case DIVIDE -> {
-                if (environment.optimize() && this.tryWriteNegate(method, environment, breakLabel, continueLabel)) {
-                    return;
-                }
-
-                writeNode(this.left, method, environment, breakLabel, continueLabel);
-                writeNode(this.right, method, environment, breakLabel, continueLabel);
-                method.visitInsn(Opcodes.FDIV);
-            }
-            default -> {
-                writeNode(this.left, method, environment, breakLabel, continueLabel);
-                writeNode(this.right, method, environment, breakLabel, continueLabel);
-
-                switch (this.operator) {
-                    case ADD -> method.visitInsn(Opcodes.FADD);
-                    case SUBTRACT -> method.visitInsn(Opcodes.FSUB);
-                    case EQUALS -> writeComparision(method, Opcodes.IFNE);
-                    case NOT_EQUALS -> writeComparision(method, Opcodes.IFEQ);
-                    case LESS_EQUALS -> writeComparision(method, Opcodes.IFGT);
-                    case LESS -> writeComparision(method, Opcodes.IFGE);
-                    case GREATER_EQUALS -> writeComparision(method, Opcodes.IFLT);
-                    case GREATER -> writeComparision(method, Opcodes.IFLE);
-                }
-            }
-        }
+        BytecodeCompiler.writeBinaryOperation(method, environment, breakLabel, continueLabel,
+                left, right, operator);
     }
 
-    // Try to replace with the negate operation if multiplying/dividing by -1
-    private boolean tryWriteNegate(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        if (this.left.isConstant()) {
-            float left = this.left.evaluate(environment);
-            if (left == -1.0F) {
-                this.right.writeBytecode(method, environment, breakLabel, continueLabel);
-                method.visitInsn(Opcodes.FNEG);
-                return true;
-            }
-        } else if (this.right.isConstant()) {
-            float right = this.right.evaluate(environment);
-            if (right == -1.0F) {
-                this.left.writeBytecode(method, environment, breakLabel, continueLabel);
-                method.visitInsn(Opcodes.FNEG);
-                return true;
-            }
-        }
-        return false;
-    }
-
-    private static void writeNode(Node node, MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        if (environment.optimize() && node.isConstant()) {
-            BytecodeCompiler.writeFloatConst(method, node.evaluate(environment));
-        } else {
-            node.writeBytecode(method, environment, breakLabel, continueLabel);
-        }
-    }
-
-    private static void writeComparision(MethodNode method, int success) {
-        Label label_false = new Label();
-        Label label_end = new Label();
-        method.visitInsn(Opcodes.FCMPL);
-        method.visitJumpInsn(success, label_false);
-        method.visitInsn(Opcodes.FCONST_1);
-        method.visitJumpInsn(Opcodes.GOTO, label_end);
-        method.visitLabel(label_false);
-        method.visitInsn(Opcodes.FCONST_0);
-        method.visitLabel(label_end);
-    }
 }

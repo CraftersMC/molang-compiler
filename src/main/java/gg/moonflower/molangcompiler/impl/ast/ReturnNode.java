@@ -1,5 +1,6 @@
 package gg.moonflower.molangcompiler.impl.ast;
 
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
 import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
@@ -10,9 +11,9 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
 
 /**
- * Returns the value on the stack from the specified value.
+ * Returns the condition on the stack from the specified condition.
  *
- * @param value The value to return
+ * @param value The condition to return
  * @author Buddy
  */
 @ApiStatus.Internal
@@ -34,21 +35,22 @@ public record ReturnNode(Node value) implements Node {
     }
 
     @Override
-    public float evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
         return this.value.evaluate(environment);
     }
 
     @Override
     public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        // Write the condition to return
         if (environment.optimize() && this.isConstant()) {
-            BytecodeCompiler.writeFloatConst(method, this.evaluate(environment));
+            BytecodeCompiler.writeConst(method, this.evaluate(environment));
         } else {
             this.value.writeBytecode(method, environment, breakLabel, continueLabel);
             if (!this.value.hasValue()) {
-                method.visitInsn(Opcodes.FCONST_0);
+                ConstNode.ZERO_FLOAT_NODE.writeBytecode(method, environment, breakLabel, continueLabel);
             }
         }
         environment.writeModifiedVariables(method);
-        method.visitInsn(Opcodes.FRETURN);
+        method.visitInsn(Opcodes.ARETURN);
     }
 }

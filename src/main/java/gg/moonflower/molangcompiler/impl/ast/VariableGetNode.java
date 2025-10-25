@@ -9,7 +9,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
 
 /**
- * Retrieves the value of a variable and puts it onto the stack.
+ * Retrieves the condition of a variable and puts it onto the stack.
  *
  * @param object The object the variable is stored in
  * @param name   The name of the variable
@@ -36,6 +36,6 @@ public record VariableGetNode(String object, String name) implements Node {
     @Override
     public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
         int index = environment.loadVariable(method, this.object, this.name);
-        method.visitVarInsn(Opcodes.FLOAD, index);
+        method.visitVarInsn(Opcodes.ALOAD, index);
     }
 }

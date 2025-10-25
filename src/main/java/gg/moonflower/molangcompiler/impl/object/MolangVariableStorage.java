@@ -52,7 +52,7 @@ public class MolangVariableStorage implements MolangObject {
         if (expression != null) {
             return expression;
         }
-        throw new MolangRuntimeException("Unknown MoLang expression: " + name);
+        return MolangExpression.NULL;
     }
 
     @Override
@@ -66,7 +66,7 @@ public class MolangVariableStorage implements MolangObject {
     }
 
     @Override
-    public MolangObject getCopy() {
+    public MolangObject createCopy() {
         return new MolangVariableStorage(this);
     }
 

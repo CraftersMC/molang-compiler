@@ -1,5 +1,6 @@
 package gg.moonflower.molangcompiler.impl.ast;
 
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
@@ -32,7 +33,7 @@ public record ScopeNode(Node node) implements Node {
     }
 
     @Override
-    public float evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
         return this.node.evaluate(environment);
     }
 

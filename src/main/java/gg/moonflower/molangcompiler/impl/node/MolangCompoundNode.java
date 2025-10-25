@@ -2,6 +2,7 @@ package gg.moonflower.molangcompiler.impl.node;
 
 import gg.moonflower.molangcompiler.api.MolangEnvironment;
 import gg.moonflower.molangcompiler.api.MolangExpression;
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangRuntimeException;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -12,15 +13,15 @@ import org.jetbrains.annotations.ApiStatus;
 public record MolangCompoundNode(MolangExpression... expressions) implements MolangExpression {
 
     @Override
-    public float get(MolangEnvironment environment) throws MolangRuntimeException {
+    public MolangValue get(MolangEnvironment environment) throws MolangRuntimeException {
         for (int i = 0; i < this.expressions.length; i++) {
-            float result = environment.resolve(this.expressions[i]);
+            MolangValue result = environment.resolve(this.expressions[i]);
             // The last expression is expected to have the `return`
             if (i >= this.expressions.length - 1) {
                 return result;
             }
         }
-        return 0;
+        return MolangValue.of(0.0F);
     }
 
     @Override

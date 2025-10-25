@@ -2,6 +2,7 @@ package gg.moonflower.molangcompiler.impl.node;
 
 import gg.moonflower.molangcompiler.api.MolangEnvironment;
 import gg.moonflower.molangcompiler.api.MolangExpression;
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.bridge.MolangJavaFunction;
 import gg.moonflower.molangcompiler.api.exception.MolangRuntimeException;
 import org.jetbrains.annotations.ApiStatus;
@@ -21,15 +22,15 @@ public class MolangFunctionNode implements MolangExpression {
     }
 
     @Override
-    public float get(MolangEnvironment environment) throws MolangRuntimeException {
-        float[] parameters;
+    public MolangValue get(MolangEnvironment environment) throws MolangRuntimeException {
+        MolangValue[] parameters;
         if (this.params < 0) {
-            parameters = new float[environment.getParameters()];
+            parameters = new MolangValue[environment.getParameters()];
             for (int i = 0; i < parameters.length; i++) {
                 parameters[i] = environment.getParameter(i);
             }
         } else {
-            parameters = new float[this.params];
+            parameters = new MolangValue[this.params];
             for (int i = 0; i < parameters.length; i++) {
                 if (!environment.hasParameter(i)) {
                     throw new MolangRuntimeException("Function requires " + parameters.length + " parameters");

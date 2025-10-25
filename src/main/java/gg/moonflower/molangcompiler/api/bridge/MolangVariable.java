@@ -1,5 +1,7 @@
 package gg.moonflower.molangcompiler.api.bridge;
 
+import gg.moonflower.molangcompiler.api.MolangValue;
+
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
@@ -12,16 +14,16 @@ import java.util.function.Supplier;
 public interface MolangVariable {
 
     /**
-     * @return The value of this variable
+     * @return The condition of this variable
      */
-    float getValue();
+    MolangValue getValue();
 
     /**
      * Sets this variable from MoLang.
      *
-     * @param value The new value
+     * @param value The new condition
      */
-    void setValue(float value);
+    void setValue(MolangValue value);
 
     /**
      * @return A new copy of this variable
@@ -32,18 +34,18 @@ public interface MolangVariable {
     /**
      * Makes read-only copy of this variable.
      *
-     * @return A new variable that reflects the value of the provided, but cannot be changed
+     * @return A new variable that reflects the condition of the provided, but cannot be changed
      * @since 2.0.0
      */
     default MolangVariable immutable() {
         return new MolangVariable() {
             @Override
-            public float getValue() {
+            public MolangValue getValue() {
                 return MolangVariable.this.getValue();
             }
 
             @Override
-            public void setValue(float value) {
+            public void setValue(MolangValue value) {
             }
 
             @Override
@@ -58,7 +60,7 @@ public interface MolangVariable {
 
             @Override
             public String toString() {
-                return "ImmutableMolangVariable[value=" + this.getValue() + "]";
+                return "ImmutableMolangVariable[condition=" + this.getValue() + "]";
             }
         };
     }
@@ -66,19 +68,19 @@ public interface MolangVariable {
     /**
      * Helper for creating a MoLang variable.
      *
-     * @param getter The getter for the value
-     * @param setter The setter for the value
+     * @param getter The getter for the condition
+     * @param setter The setter for the condition
      * @return The variable representation
      */
-    static MolangVariable of(Supplier<Float> getter, Consumer<Float> setter) {
+    static MolangVariable of(Supplier<MolangValue> getter, Consumer<MolangValue> setter) {
         return new MolangVariable() {
             @Override
-            public float getValue() {
+            public MolangValue getValue() {
                 return getter.get();
             }
 
             @Override
-            public void setValue(float value) {
+            public void setValue(MolangValue value) {
                 setter.accept(value);
             }
 
@@ -89,7 +91,7 @@ public interface MolangVariable {
 
             @Override
             public String toString() {
-                return "DynamicMolangVariable[value=" + this.getValue() + "]";
+                return "DynamicMolangVariable[condition=" + this.getValue() + "]";
             }
         };
     }
@@ -100,25 +102,35 @@ public interface MolangVariable {
      * @return A private variable that can be retrieved
      */
     static MolangVariable create() {
-        return create(0.0F);
+        return create(MolangValue.of(0.0f));
     }
 
+    static MolangVariable create(float initialValue) {
+        return create(MolangValue.of(initialValue));
+    }
+    static MolangVariable create(String initialValue) {
+        return create(MolangValue.of(initialValue));
+    }
+
+    static MolangVariable create(boolean initialValue) {
+        return create(MolangValue.of(initialValue));
+    }
     /**
      * Helper for creating a MoLang variable without a backing field.
      *
-     * @param initialValue The initial value of the variable
+     * @param initialValue The initial condition of the variable
      * @return A private variable that can be retrieved
      */
-    static MolangVariable create(float initialValue) {
-        final float[] value = {initialValue};
+    static MolangVariable create(MolangValue initialValue) {
+        final MolangValue[] value = {initialValue};
         return new MolangVariable() {
             @Override
-            public float getValue() {
+            public MolangValue getValue() {
                 return value[0];
             }
 
             @Override
-            public void setValue(float v) {
+            public void setValue(MolangValue v) {
                 value[0] = v;
             }
 
@@ -129,7 +141,7 @@ public interface MolangVariable {
 
             @Override
             public String toString() {
-                return "MolangVariable[value=" + this.getValue() + "]";
+                return "MolangVariable[condition=" + this.getValue() + "]";
             }
         };
     }

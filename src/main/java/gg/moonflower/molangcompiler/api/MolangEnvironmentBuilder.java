@@ -45,7 +45,19 @@ public interface MolangEnvironmentBuilder<V extends MolangEnvironment> {
      * @param name  The name of the value
      * @param value The resulting number
      */
+    default MolangEnvironmentBuilder<V> setQuery(String name, MolangValue value) {
+        return this.setQuery(name, MolangExpression.of(value));
+    }
+
     default MolangEnvironmentBuilder<V> setQuery(String name, float value) {
+        return this.setQuery(name, MolangExpression.of(value));
+    }
+
+    default MolangEnvironmentBuilder<V> setQuery(String name, String value) {
+        return this.setQuery(name, MolangExpression.of(value));
+    }
+
+    default MolangEnvironmentBuilder<V> setQuery(String name, boolean value) {
         return this.setQuery(name, MolangExpression.of(value));
     }
 
@@ -55,7 +67,7 @@ public interface MolangEnvironmentBuilder<V extends MolangEnvironment> {
      * @param name  The name of the value
      * @param value The resulting number
      */
-    default MolangEnvironmentBuilder<V> setQuery(String name, Supplier<Float> value) {
+    default MolangEnvironmentBuilder<V> setQuery(String name, Supplier<MolangValue> value) {
         return this.setQuery(name, MolangExpression.lazy(value));
     }
 
@@ -84,7 +96,19 @@ public interface MolangEnvironmentBuilder<V extends MolangEnvironment> {
      * @param name  The name of the value
      * @param value The resulting number
      */
+    default MolangEnvironmentBuilder<V> setGlobal(String name, MolangValue value) {
+        return this.setGlobal(name, MolangExpression.of(value));
+    }
+
     default MolangEnvironmentBuilder<V> setGlobal(String name, float value) {
+        return this.setGlobal(name, MolangExpression.of(value));
+    }
+
+    default MolangEnvironmentBuilder<V> setGlobal(String name, String value) {
+        return this.setGlobal(name, MolangExpression.of(value));
+    }
+
+    default MolangEnvironmentBuilder<V> setGlobal(String name, boolean value) {
         return this.setGlobal(name, MolangExpression.of(value));
     }
 
@@ -94,7 +118,7 @@ public interface MolangEnvironmentBuilder<V extends MolangEnvironment> {
      * @param name  The name of the value
      * @param value The resulting number
      */
-    default MolangEnvironmentBuilder<V> setGlobal(String name, Supplier<Float> value) {
+    default MolangEnvironmentBuilder<V> setGlobal(String name, Supplier<MolangValue> value) {
         return this.setGlobal(name, MolangExpression.lazy(value));
     }
 
@@ -127,13 +151,15 @@ public interface MolangEnvironmentBuilder<V extends MolangEnvironment> {
         return this.setVariable(name, MolangExpression.of(value));
     }
 
-    /**
-     * Sets a global immutable value.
-     *
-     * @param name  The name of the value
-     * @param value The resulting number
-     */
     default MolangEnvironmentBuilder<V> setVariable(String name, float value) {
+        return this.setVariable(name, MolangExpression.of(value));
+    }
+
+    default MolangEnvironmentBuilder<V> setVariable(String name, String value) {
+        return this.setVariable(name, MolangExpression.of(value));
+    }
+
+    default MolangEnvironmentBuilder<V> setVariable(String name, boolean value) {
         return this.setVariable(name, MolangExpression.of(value));
     }
 
@@ -143,7 +169,7 @@ public interface MolangEnvironmentBuilder<V extends MolangEnvironment> {
      * @param name  The name of the value
      * @param value The resulting number
      */
-    default MolangEnvironmentBuilder<V> setVariable(String name, Supplier<Float> value) {
+    default MolangEnvironmentBuilder<V> setVariable(String name, Supplier<MolangValue> value) {
         return this.setVariable(name, MolangExpression.lazy(value));
     }
 
@@ -212,12 +238,12 @@ public interface MolangEnvironmentBuilder<V extends MolangEnvironment> {
             }
 
             @Override
-            public void addQuery(String name, float value) {
+            public void addQuery(String name, MolangValue value) {
                 MolangEnvironmentBuilder.this.setQuery(name, value);
             }
 
             @Override
-            public void addQuery(String name, Supplier<Float> value) {
+            public void addQuery(String name, Supplier<MolangValue> value) {
                 MolangEnvironmentBuilder.this.setQuery(name, value);
             }
 
@@ -250,7 +276,7 @@ public interface MolangEnvironmentBuilder<V extends MolangEnvironment> {
      * @param thisValue The value to load for the context
      * @return A new runtime
      */
-    default V create(float thisValue) {
+    default V create(MolangValue thisValue) {
         V environment = this.create();
         environment.setThisValue(thisValue);
         return environment;

@@ -54,7 +54,7 @@ public record VariableSetNode(String object,
             method.visitInsn(Opcodes.DUP);
         }
         int index = environment.allocateVariable(this.object + "." + this.name);
-        method.visitVarInsn(Opcodes.FSTORE, index);
+        method.visitVarInsn(Opcodes.ASTORE, index);
         environment.markDirty(this.object, this.name);
     }
 

@@ -1,6 +1,8 @@
 package gg.moonflower.molangcompiler.impl.ast;
 
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
+import gg.moonflower.molangcompiler.impl.MolangUtil;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
 import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
@@ -15,11 +17,14 @@ import org.objectweb.asm.tree.MethodNode;
  * @author Buddy, Ocelot
  */
 @ApiStatus.Internal
-public record ConstNode(float value) implements Node {
+public record ConstNode(MolangValue value) implements Node {
+
+    public static final ConstNode ZERO_FLOAT_NODE = new ConstNode(MolangValue.of(0.0f));
+    public static final ConstNode ONE_FLOAT_NODE = new ConstNode(MolangValue.of(0.0f));
 
     @Override
     public String toString() {
-        return String.valueOf(this.value);
+        return MolangUtil.toString(this.value);
     }
 
     @Override
@@ -33,12 +38,12 @@ public record ConstNode(float value) implements Node {
     }
 
     @Override
-    public float evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
         return this.value;
     }
 
     @Override
     public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        BytecodeCompiler.writeFloatConst(method, this.value);
+        BytecodeCompiler.writeConst(method, this.value);
     }
 }

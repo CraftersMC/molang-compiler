@@ -2,9 +2,19 @@
 
 # Molang Compiler
 
-High Speed MoLang compiler and executor designed with per-frame execution in mind. Check
-the [MoLang Documentation](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/molangreference/examples/molangconcepts/molangintroduction)
-for more information on how to write MoLang expressions.
+High-speed MoLang compiler and executor designed with per-frame execution in mind. This implementation compiles MoLang
+expressions to Java bytecode for optimal runtime performance.
+
+## MoLang Compliance
+
+This compiler implements **all 26 official MoLang math functions** and supports the complete operator set from the
+Minecraft Bedrock Edition specification. See [MOLANG_COMPLIANCE.md](MOLANG_COMPLIANCE.md) for detailed compatibility
+information.
+
+For official MoLang documentation, see:
+
+- [Microsoft Learn - MoLang Reference](https://learn.microsoft.com/en-us/minecraft/creator/reference/content/molangreference/)
+- [Microsoft Learn - MoLang Syntax Guide](https://learn.microsoft.com/en-us/minecraft/creator/documents/molang/syntax-guide)
 
 # How to add to your workspace
 
@@ -70,25 +80,16 @@ public class NeoForgeMod {
 }
 ```
 
-# Extended Functionality
+## Java Integration
 
-MoLang compiler supports some new features that are not in the Minecraft Bedrock MoLang spec.
+- **Java function calls**: Execute custom Java functions from MoLang expressions
+  ```molang
+  custom_lib.javaFunction(param1, param2, param3)
+  ```
+- **Custom libraries**: Register your own MoLang libraries with custom functions
 
-- `math.sign(value)` returns 1 for positive values and -1 for negative values.
-- `math.triangle_wave(value, period)` returns the position on a triangle wave from -1 to 1 with defined period.
-- `++`, `+=`, `--`, `-=`, `/=`, and `*=` for mutable types. Eg: `v.test += 14`
-- Expressions can execute java functions with float parameters. Eg: `custom_lib.javaFunction(param1, param2, param3)`
-
-# Limitations
-
-This implementation does not support the following:
-
-- Structs, although there is support for variables with multiple parts. Eg: `v.pos.x = 4`
-- Arrays
-- Strings
-- Arrow operator (`->`)
-- For each operations (`for_each(<variable>, <array>, <expression>)`)
-- Null-coalescing operators within loops (`loop(5, {v.test ?? 4})`)
+**Note:** When writing MoLang expressions that need to be compatible with Minecraft Bedrock Edition, avoid using these
+extensions.
 
 # Examples
 

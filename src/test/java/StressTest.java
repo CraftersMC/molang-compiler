@@ -152,7 +152,7 @@ public class StressTest {
 
         time = System.nanoTime();
         for (int i = 0; i < TEST_COUNT; i++) {
-            PREVENT_OPTIMIZING[i] = expression.get(environment);
+            PREVENT_OPTIMIZING[i] = expression.get(environment).asFloat();
         }
         if (PREVENT_OPTIMIZING[0] != exp) {
             throw new RuntimeException("Invalid bytecode value. Expected " + exp + ", but got " + PREVENT_OPTIMIZING[0] + " in expr \"" + expr + "\" transformed to \"" + expression + "\"");

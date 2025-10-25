@@ -1,5 +1,6 @@
 package gg.moonflower.molangcompiler.impl.compiler;
 
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangSyntaxException;
 import gg.moonflower.molangcompiler.impl.ast.*;
 import org.jetbrains.annotations.ApiStatus;
@@ -9,11 +10,45 @@ import java.util.List;
 import java.util.function.Predicate;
 
 /**
+ * Recursive descent parser that transforms tokens into an Abstract Syntax Tree (AST).
+ * <p>
+ * This parser converts the flat array of tokens produced by {@link MolangLexer} into a hierarchical
+ * tree structure of {@link Node} objects that can be evaluated or compiled to bytecode.
+ * <p>
+ * The parser implements operator precedence for mathematical expressions:
+ * <ul>
+ *   <li>Lowest: Logical OR (||), Logical AND (&amp;&amp;)</li>
+ *   <li>Comparison: ==, !=, &lt;, &gt;, &lt;=, &gt;=</li>
+ *   <li>Addition: +, -</li>
+ *   <li>Multiplication: *, /</li>
+ *   <li>Highest: Unary negation (!), parentheses, function calls</li>
+ * </ul>
+ * <p>
+ * Supported language constructs include:
+ * <ul>
+ *   <li>Variable access and assignment: {@code temp.x}, {@code variable.y = 5}</li>
+ *   <li>Function calls: {@code math.sin(condition)}, {@code query.is_on_ground()}</li>
+ *   <li>Control flow: {@code if(condition) condition}, ternary {@code condition ? true : false}</li>
+ *   <li>Loops: {@code loop(10, { statements })}</li>
+ *   <li>Break, continue, and return statements</li>
+ * </ul>
+ *
  * @author Ocelot
+ * @since 1.0.0
  */
 @ApiStatus.Internal
 public final class MolangParser {
 
+    /**
+     * Parses an array of tokens into an Abstract Syntax Tree.
+     * <p>
+     * This is the main entry point for the parser. It automatically wraps the last expression
+     * in a {@link ReturnNode} to ensure the expression produces a condition.
+     *
+     * @param tokens The array of tokens to parse (must not be empty)
+     * @return The root node of the AST
+     * @throws MolangSyntaxException if the tokens cannot be parsed or are invalid
+     */
     public static Node parseTokens(MolangLexer.Token[] tokens) throws MolangSyntaxException {
         if (tokens.length == 0) {
             throw new MolangSyntaxException("Expected token");
@@ -21,6 +56,18 @@ public final class MolangParser {
         return parseTokensUntil(new TokenReader(tokens), true, token -> false);
     }
 
+    /**
+     * Parses tokens until a specific condition is met, optionally wrapping the result in a return statement.
+     * <p>
+     * This method handles parsing multiple semicolon-separated statements and combines them into
+     * a {@link CompoundNode} if there are multiple statements.
+     *
+     * @param reader       The token reader positioned at the start of the tokens to parse
+     * @param insertReturn If true, automatically wraps the last statement in a {@link ReturnNode}
+     * @param filter       Predicate that returns true when parsing should stop
+     * @return The parsed node (either a single node or a CompoundNode containing multiple statements)
+     * @throws MolangSyntaxException if parsing fails
+     */
     private static Node parseTokensUntil(TokenReader reader, boolean insertReturn, Predicate<MolangLexer.Token> filter) throws MolangSyntaxException {
         List<Node> nodes = new ArrayList<>(2);
 
@@ -59,7 +106,22 @@ public final class MolangParser {
         return new CompoundNode(nodes.toArray(Node[]::new));
     }
 
-    // Parses a single token statement. Eg temp.a=4 or variable.test from variable.test * 2;
+    /**
+     * Parses a single node from the token stream.
+     * <p>
+     * This method handles the parsing of atomic language constructs such as:
+     * <ul>
+     *   <li>Literals: numbers, strings, booleans</li>
+     *   <li>Variables: {@code temp.a}, {@code variable.test}</li>
+     *   <li>Control flow: {@code return}, {@code if}, {@code loop}, {@code break}, {@code continue}</li>
+     *   <li>Parenthesized expressions: {@code (expression)}</li>
+     *   <li>Scopes: {@code { statements }}</li>
+     * </ul>
+     *
+     * @param reader The token reader positioned at the node to parse
+     * @return The parsed node
+     * @throws MolangSyntaxException if parsing fails
+     */
     private static Node parseNode(TokenReader reader) throws MolangSyntaxException {
         expectLength(reader, 1);
 
@@ -124,7 +186,7 @@ public final class MolangParser {
                     yield new TernaryOperationNode(condition, branch, parseExpression(reader));
                 }
 
-                // value ? left
+                // condition ? left
                 yield new BinaryConditionalNode(condition, branch);
             }
             case THIS -> {
@@ -133,19 +195,37 @@ public final class MolangParser {
             }
             case TRUE -> {
                 reader.skip();
-                yield new ConstNode(1.0F);
+                yield new ConstNode(MolangValue.of(true));
             }
             case FALSE -> {
                 reader.skip();
-                yield new ConstNode(0.0F);
+                yield new ConstNode(MolangValue.of(false));
+            }
+            case STRING -> {
+                String rawValue = reader.peek().value();
+                reader.skip();
+
+                // Remove quotes (first and last character)
+                String stringValue = rawValue.substring(1, rawValue.length() - 1);
+
+                // Process escape sequences
+                stringValue = stringValue
+                    .replace("\\\"", "\"")
+                    .replace("\\'", "'")
+                    .replace("\\\\", "\\")
+                    .replace("\\n", "\n")
+                    .replace("\\r", "\r")
+                    .replace("\\t", "\t");
+
+                yield new ConstNode(MolangValue.of(stringValue));
             }
             case NUMERAL -> {
                 try {
-                    // 3
+                    // Read until decimal point
                     float value = Integer.parseInt(reader.peek().value());
                     reader.skip();
 
-                    // 3.14
+                    // Read decimals
                     if (reader.canRead() && reader.peek().type() == MolangLexer.TokenType.DOT) {
                         reader.skip();
                         expect(reader, MolangLexer.TokenType.NUMERAL);
@@ -159,7 +239,7 @@ public final class MolangParser {
                         }
                     }
 
-                    yield new ConstNode(value);
+                    yield new ConstNode(MolangValue.of(value));
                 } catch (Exception e) {
                     e.printStackTrace();
                     throw error("Error parsing numeral", reader);
@@ -173,7 +253,7 @@ public final class MolangParser {
                             throw error("Cannot negate " + reader.peekAfter(1), reader);
                         }
                         reader.skip();
-                        yield new BinaryOperationNode(BinaryOperation.MULTIPLY, new ConstNode(-1.0F), parseNode(reader));
+                        yield new BinaryOperationNode(BinaryOperation.MULTIPLY, new ConstNode(MolangValue.of(-1.0f)), parseNode(reader));
                     }
                     case "+" -> {
                         if (!reader.canRead(2) || !reader.peekAfter(1).type().canNegate()) {
@@ -199,11 +279,34 @@ public final class MolangParser {
                 reader.skip();
                 yield new ScopeNode(node);
             }
+            case SPECIAL -> {
+                switch (token.value()) {
+                    case "!" -> {
+                        reader.skip();
+                        // Unary operation node
+                        yield new UnaryOperationNode(UnaryOperation.FLIP, parseNode(reader));
+                    }
+                    default -> throw error("Unexpected token", reader);
+                }
+            }
             default -> throw error("Unexpected token", reader);
         };
     }
 
-    // Parses a full expression by parsing each node inside
+    /**
+     * Parses a complete expression, handling operators and building the expression tree.
+     * <p>
+     * This method implements operator precedence by recursively parsing nodes and combining
+     * them based on the operators encountered. It handles binary operations (addition, subtraction,
+     * multiplication, division), comparison operators, logical operators, and the ternary operator.
+     * <p>
+     * The method starts by parsing a single node and then repeatedly looks for operators to combine
+     * it with subsequent nodes, respecting operator precedence rules.
+     *
+     * @param reader The token reader positioned at the start of the expression
+     * @return The root node of the parsed expression tree
+     * @throws MolangSyntaxException if the expression is malformed
+     */
     public static Node parseExpression(TokenReader reader) throws MolangSyntaxException {
         Node result = parseNode(reader);
         while (reader.canRead()) {
@@ -217,7 +320,7 @@ public final class MolangParser {
             }
 
             switch (token.type()) {
-                case NUMERAL, ALPHANUMERIC, LEFT_PARENTHESIS, LEFT_BRACE -> {
+                case NUMERAL, ALPHANUMERIC, LEFT_PARENTHESIS, LEFT_BRACE, STRING -> {
                     if (result != null) {
                         throw error("Unexpected token", reader);
                     }
@@ -251,7 +354,7 @@ public final class MolangParser {
                         case "?" -> {
                             reader.skip();
 
-                            // value ? left : right
+                            // condition ? left : right
                             Node left = parseExpression(reader);
                             if (reader.canRead() && !reader.peek().type().isTerminating()) {
                                 expect(reader, MolangLexer.TokenType.SPECIAL, ":");
@@ -260,7 +363,7 @@ public final class MolangParser {
                                 break;
                             }
 
-                            // value ? left
+                            // condition ? left
                             result = new BinaryConditionalNode(result, left);
                         }
                         case "!" -> {
@@ -272,9 +375,6 @@ public final class MolangParser {
                                 break;
                             }
 
-                            if (result != null) {
-                                throw error("Unexpected token", reader);
-                            }
                             result = new NegateNode(parseNode(reader));
                         }
                         case ">" -> {
@@ -317,6 +417,21 @@ public final class MolangParser {
         return result;
     }
 
+    /**
+     * Parses variable access, assignment, and function calls starting with an alphanumeric token.
+     * <p>
+     * This method handles complex patterns such as:
+     * <ul>
+     *   <li>Variable get: {@code temp.x}, {@code query.position}</li>
+     *   <li>Variable set: {@code variable.y = 5}, {@code temp.z += 10}</li>
+     *   <li>Increment/Decrement: {@code temp.counter++}, {@code temp.condition--}</li>
+     *   <li>Function calls: {@code math.sin(condition)}, {@code query.health(param1, param2)}</li>
+     * </ul>
+     *
+     * @param reader The token reader positioned at the alphanumeric token
+     * @return The parsed node representing the variable access or function call
+     * @throws MolangSyntaxException if parsing fails
+     */
     private static Node parseAlphanumeric(TokenReader reader) throws MolangSyntaxException {
         expectLength(reader, 2);
 
@@ -352,7 +467,7 @@ public final class MolangParser {
         // obj.name
         if (!reader.canRead() || reader.peek().type().isTerminating()) {
             if (mathOperation != null) {
-                throw error("Cannot get value of a math function", reader);
+                throw error("Cannot get condition of a math function", reader);
             }
             return new VariableGetNode(object, name);
         }
@@ -376,17 +491,17 @@ public final class MolangParser {
         // obj.name++
         if (operand.type() == MolangLexer.TokenType.INCREMENT) {
             reader.skip();
-            return new VariableSetNode(object, name, new BinaryOperationNode(BinaryOperation.ADD, new VariableGetNode(object, name), new ConstNode(1.0F)));
+            return new VariableSetNode(object, name, new BinaryOperationNode(BinaryOperation.ADD, new VariableGetNode(object, name), new ConstNode(MolangValue.of(1.0f))));
         }
         // obj.name--
         if (operand.type() == MolangLexer.TokenType.DECREMENT) {
             reader.skip();
-            return new VariableSetNode(object, name, new BinaryOperationNode(BinaryOperation.SUBTRACT, new VariableGetNode(object, name), new ConstNode(1.0F)));
+            return new VariableSetNode(object, name, new BinaryOperationNode(BinaryOperation.SUBTRACT, new VariableGetNode(object, name), new ConstNode(MolangValue.of(1.0f))));
         }
         // obj.name*=, obj.name+=, obj.name-=, obj.name/=
         if (reader.canRead(2) && operand.type() == MolangLexer.TokenType.BINARY_OPERATION) {
             if (mathOperation != null) {
-                throw error("Cannot set value of a math function", reader);
+                throw error("Cannot set condition of a math function", reader);
             }
 
             VariableGetNode left = new VariableGetNode(object, name);
@@ -412,6 +527,10 @@ public final class MolangParser {
             // obj.func()
             if (reader.peek().type() == MolangLexer.TokenType.RIGHT_PARENTHESIS) {
                 reader.skip();
+                // Validate number of parameters for math functions
+                if (mathOperation != null) {
+                    throw error("Expected " + mathOperation.getParameters() + " parameters, got none", reader);
+                }
                 return new FunctionNode(object, name);
             }
 
@@ -420,6 +539,9 @@ public final class MolangParser {
             while (reader.canRead()) {
                 parameters.add(parseExpression(reader));
 
+                if (!reader.canRead()) {
+                    expect(reader, MolangLexer.TokenType.RIGHT_PARENTHESIS);
+                }
                 if (reader.peek().type() == MolangLexer.TokenType.COMMA) {
                     reader.skip();
                     continue;
@@ -444,6 +566,18 @@ public final class MolangParser {
         return new VariableGetNode(object, name);
     }
 
+    /**
+     * Attempts to parse a math operation if the object is "math".
+     * <p>
+     * Validates that the function name corresponds to a known math operation in the
+     * {@link MathOperation} enum.
+     *
+     * @param object The object name (e.g., "math", "query")
+     * @param name   The function name (e.g., "sin", "cos", "abs")
+     * @param reader The token reader for error reporting
+     * @return The matching MathOperation, or null if the object is not "math"
+     * @throws MolangSyntaxException if the object is "math" but the function name is unknown
+     */
     private static MathOperation parseMathOperation(String object, String name, TokenReader reader) throws MolangSyntaxException {
         if (!"math".equalsIgnoreCase(object)) {
             return null;
@@ -457,6 +591,17 @@ public final class MolangParser {
         throw error("Unknown math function: " + name, reader);
     }
 
+    /**
+     * Parses a binary operation (addition, subtraction, multiplication, division) with proper precedence.
+     * <p>
+     * This method handles multiplication and division with higher precedence than addition and subtraction
+     * by calling {@link #parseTerm(TokenReader)} for additive operations.
+     *
+     * @param left   The left operand node
+     * @param reader The token reader positioned at the operator
+     * @return The binary operation node
+     * @throws MolangSyntaxException if parsing fails
+     */
     private static Node parseBinaryExpression(Node left, TokenReader reader) throws MolangSyntaxException {
         MolangLexer.Token token = reader.peek();
         switch (token.value()) {
@@ -480,6 +625,17 @@ public final class MolangParser {
         return left;
     }
 
+    /**
+     * Parses a term with multiplication and division operations.
+     * <p>
+     * This method implements higher precedence for multiplication and division operations
+     * compared to addition and subtraction. It's called by {@link #parseBinaryExpression(Node, TokenReader)}
+     * when parsing additive operations.
+     *
+     * @param reader The token reader positioned at the start of the term
+     * @return The parsed term node
+     * @throws MolangSyntaxException if parsing fails
+     */
     private static Node parseTerm(TokenReader reader) throws MolangSyntaxException {
         Node left = parseNode(reader);
         if (!reader.canRead()) {
@@ -502,12 +658,27 @@ public final class MolangParser {
         return left;
     }
 
+    /**
+     * Validates that the next token matches the expected type.
+     *
+     * @param reader The token reader
+     * @param token  The expected token type
+     * @throws MolangSyntaxException if the token doesn't match or no tokens are available
+     */
     public static void expect(TokenReader reader, MolangLexer.TokenType token) throws MolangSyntaxException {
         if (!reader.canRead() || reader.peek().type() != token) {
             throw error("Expected " + token, reader);
         }
     }
 
+    /**
+     * Validates that the next token matches the expected type and condition.
+     *
+     * @param reader The token reader
+     * @param token  The expected token type
+     * @param value  The expected token condition
+     * @throws MolangSyntaxException if the token doesn't match
+     */
     public static void expect(TokenReader reader, MolangLexer.TokenType token, String value) throws MolangSyntaxException {
         expect(reader, token);
         if (!value.equals(reader.peek().value())) {
@@ -515,12 +686,26 @@ public final class MolangParser {
         }
     }
 
+    /**
+     * Validates that at least the specified number of tokens are available.
+     *
+     * @param reader The token reader
+     * @param amount The minimum number of tokens required
+     * @throws MolangSyntaxException if insufficient tokens are available
+     */
     public static void expectLength(TokenReader reader, int amount) throws MolangSyntaxException {
         if (!reader.canRead(amount)) {
             throw new MolangSyntaxException("Trailing statement", reader.getString(), reader.getString().length());
         }
     }
 
+    /**
+     * Creates a syntax exception with the current parsing context.
+     *
+     * @param error  The error message
+     * @param reader The token reader providing the position and source string
+     * @return A MolangSyntaxException with context information
+     */
     public static MolangSyntaxException error(String error, TokenReader reader) {
         return new MolangSyntaxException(error, reader.getString(), reader.getCursorOffset());
     }

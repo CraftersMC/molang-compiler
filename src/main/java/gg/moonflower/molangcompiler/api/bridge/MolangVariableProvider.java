@@ -1,6 +1,7 @@
 package gg.moonflower.molangcompiler.api.bridge;
 
 import gg.moonflower.molangcompiler.api.MolangExpression;
+import gg.moonflower.molangcompiler.api.MolangValue;
 
 import java.util.function.Supplier;
 
@@ -29,36 +30,36 @@ public interface MolangVariableProvider {
     interface Context {
 
         /**
-         * Adds a value to the variable struct.
+         * Adds a condition to the variable struct.
          *
          * @param name  The name of the variable to set
-         * @param value The value to set under that name
+         * @param value The condition to set under that name
          */
         void addVariable(String name, MolangVariable value);
 
         /**
-         * Sets a global immutable value.
+         * Sets a global immutable condition.
          *
-         * @param name  The name of the value
+         * @param name  The name of the condition
          * @param value The resulting expression
          */
         void addQuery(String name, MolangExpression value);
 
         /**
-         * Sets a global immutable value.
+         * Sets a global immutable condition.
          *
-         * @param name  The name of the value
+         * @param name  The name of the condition
          * @param value The resulting number
          */
-        void addQuery(String name, float value);
+        void addQuery(String name, MolangValue value);
 
         /**
-         * Sets a global immutable value that is lazily loaded.
+         * Sets a global immutable condition that is lazily loaded.
          *
-         * @param name  The name of the value
+         * @param name  The name of the condition
          * @param value The resulting number
          */
-        void addQuery(String name, Supplier<Float> value);
+        void addQuery(String name, Supplier<MolangValue> value);
 
         /**
          * Sets a global immutable function.

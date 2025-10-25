@@ -2,8 +2,8 @@ package gg.moonflower.molangcompiler.impl;
 
 import gg.moonflower.molangcompiler.api.MolangEnvironment;
 import gg.moonflower.molangcompiler.api.MolangEnvironmentBuilder;
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangRuntimeException;
-import gg.moonflower.molangcompiler.api.object.ImmutableMolangObject;
 import gg.moonflower.molangcompiler.api.object.MolangObject;
 import org.jetbrains.annotations.ApiStatus;
 
@@ -26,7 +26,7 @@ public record ImmutableMolangEnvironment(MolangEnvironment environment) implemen
     }
 
     @Override
-    public void loadParameter(float value) throws MolangRuntimeException {
+    public void loadParameter(MolangValue value) throws MolangRuntimeException {
         this.environment.loadParameter(value);
     }
 
@@ -36,7 +36,7 @@ public record ImmutableMolangEnvironment(MolangEnvironment environment) implemen
     }
 
     @Override
-    public float getThis() {
+    public MolangValue getThis() {
         return this.environment.getThis();
     }
 
@@ -66,7 +66,7 @@ public record ImmutableMolangEnvironment(MolangEnvironment environment) implemen
     }
 
     @Override
-    public float getParameter(int parameter) throws MolangRuntimeException {
+    public MolangValue getParameter(int parameter) throws MolangRuntimeException {
         return this.environment.getParameter(parameter);
     }
 
@@ -81,7 +81,7 @@ public record ImmutableMolangEnvironment(MolangEnvironment environment) implemen
     }
 
     @Override
-    public void setThisValue(float thisValue) {
+    public void setThisValue(MolangValue thisValue) {
         this.environment.setThisValue(thisValue);
     }
 

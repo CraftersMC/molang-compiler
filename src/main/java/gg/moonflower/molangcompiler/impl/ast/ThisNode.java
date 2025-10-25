@@ -10,7 +10,7 @@ import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
 
 /**
- * Retrieves the value of a "this" and puts it onto the stack.
+ * Retrieves the condition of a "this" and puts it onto the stack.
  */
 @ApiStatus.Internal
 public record ThisNode() implements Node {
@@ -40,12 +40,12 @@ public record ThisNode() implements Node {
                     Opcodes.INVOKEINTERFACE,
                     "gg/moonflower/molangcompiler/api/MolangEnvironment",
                     "getThis",
-                    "()F",
+                    "()Lgg/moonflower/molangcompiler/api/MolangValue;",
                     true
             );
-            method.visitVarInsn(Opcodes.FSTORE, index);
+            method.visitVarInsn(Opcodes.ASTORE, index);
         }
 
-        method.visitVarInsn(Opcodes.FLOAD, index);
+        method.visitVarInsn(Opcodes.ALOAD, index);
     }
 }

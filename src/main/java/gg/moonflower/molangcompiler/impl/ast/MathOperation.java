@@ -31,6 +31,7 @@ public enum MathOperation {
     MIN_ANGLE(1),
     MOD(2),
     PI(0),
+    E(0),
     POW(2),
     RANDOM(2, false),
     RANDOM_INTEGER(2, false),

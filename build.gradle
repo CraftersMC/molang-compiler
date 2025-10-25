@@ -3,7 +3,7 @@ apply plugin: 'java-library'
 apply plugin: 'maven-publish'
 
 group 'gg.moonflower'
-version '3.1.1'
+version '4.0.0'
 
 if (System.getenv('BUILD_NUMBER') != null) {
     version += "." + System.getenv('BUILD_NUMBER')
@@ -21,7 +21,8 @@ repositories {
 dependencies {
     compileOnly 'org.jetbrains:annotations:24.1.0'
 
-    implementation 'org.ow2.asm:asm-tree:9.6'
+    implementation 'org.ow2.asm:asm-tree:9.8'
+    implementation 'org.ow2.asm:asm-util:9.8'
 
     testImplementation 'com.google.guava:guava:33.0.0-jre'
     testImplementation 'org.junit.jupiter:junit-jupiter:5.10.1'

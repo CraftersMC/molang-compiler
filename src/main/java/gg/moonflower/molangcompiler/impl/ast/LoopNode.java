@@ -42,6 +42,7 @@ public record LoopNode(Node iterations, Node body) implements Node {
 
         // iterations
         this.iterations.writeBytecode(method, environment, breakLabel, continueLabel);
+        BytecodeCompiler.unwrapFloat(method);
         method.visitInsn(Opcodes.F2I);
 
         BytecodeCompiler.writeIntConst(method, 0); // int i = 0;

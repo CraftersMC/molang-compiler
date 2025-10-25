@@ -2,14 +2,18 @@ import com.google.common.base.Stopwatch;
 import gg.moonflower.molangcompiler.api.MolangCompiler;
 import gg.moonflower.molangcompiler.api.MolangExpression;
 import gg.moonflower.molangcompiler.api.MolangRuntime;
+import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.bridge.MolangVariable;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.api.exception.MolangSyntaxException;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.List;
 import java.util.concurrent.TimeUnit;
+import java.util.function.BiFunction;
 
 public class MolangTest {
 
@@ -51,7 +55,7 @@ public class MolangTest {
         long[] times = new long[iterations];
         for (int i = 0; i < iterations; i++) {
             Stopwatch runTime = Stopwatch.createStarted();
-            float result = runtime.resolve(expression);
+            float result = runtime.resolve(expression).asFloat();
             runTime.stop();
 
             Assertions.assertEquals(3, result);
@@ -67,7 +71,7 @@ public class MolangTest {
         MolangExpression expression = compiler.compile("math.pi*2+(3/2+53)*((7)/5)");
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(82.58318328857422, result);
     }
@@ -86,7 +90,7 @@ public class MolangTest {
                 """);
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(20, result);
     }
@@ -106,7 +110,7 @@ public class MolangTest {
                 """);
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(8, result);
     }
@@ -117,7 +121,7 @@ public class MolangTest {
         MolangExpression expression = compiler.compile("math.die_roll(1, 0, 10)");
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
     }
 
@@ -133,7 +137,7 @@ public class MolangTest {
 
         MolangRuntime runtime = MolangRuntime.runtime()
                 .setVariable("test", this.testVariable).create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(21, result);
     }
@@ -147,10 +151,11 @@ public class MolangTest {
 
         MolangRuntime runtime = MolangRuntime.runtime()
                 .setVariable("test", this.testVariable).create();
-        float result = runtime.resolve(expression);
+        MolangValue result = runtime.resolve(expression);
+        MolangValue expectedValue = MolangValue.of(2.0f);
         System.out.println(expression + "\n==RESULT==\n" + result);
-        Assertions.assertEquals(2, result);
-        Assertions.assertEquals(2, this.testVariable.getValue());
+        Assertions.assertEquals(expectedValue, result);
+        Assertions.assertEquals(expectedValue, this.testVariable.getValue());
     }
 
     @Test
@@ -159,7 +164,7 @@ public class MolangTest {
         MolangExpression expression = compiler.compile("v.b = 2;v.a = 3;v.ab = v.b;v.c = 1;");
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
     }
 
@@ -169,7 +174,7 @@ public class MolangTest {
         MolangExpression expression = compiler.compile("1 > 2 ? 10 : 20");
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(20, result);
     }
@@ -185,7 +190,7 @@ public class MolangTest {
                 .setVariable("particle_random_3", MolangExpression.ZERO)
                 .setVariable("particle_random_4", MolangExpression.ZERO)
                 .create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(0.5, result);
     }
@@ -196,9 +201,20 @@ public class MolangTest {
         MolangExpression expression = compiler.compile("+variable.particle_random_3??0>0.2 ? -10 : -4");
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(-4, result);
+    }
+
+    @Test
+    void testNegativeCondition2() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("+variable.particle_random_3??0.3>0.2 ? -10 : -4");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        float result = runtime.resolve(expression).asFloat();
+        System.out.println(expression + "\n==RESULT==\n" + result);
+        Assertions.assertEquals(-10, result);
     }
 
     @Test
@@ -209,7 +225,7 @@ public class MolangTest {
         MolangRuntime runtime = MolangRuntime.runtime()
                 .setVariable("particle_random_3", MolangExpression.ZERO)
                 .create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(28, result);
     }
@@ -236,7 +252,7 @@ public class MolangTest {
                 .setQuery("screen.width", MolangExpression.of(12))
                 .setQuery("screen.height", MolangExpression.of(12))
                 .create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(12, result);
     }
@@ -244,15 +260,15 @@ public class MolangTest {
     @Test
     void testImmutable() throws MolangException {
         MolangCompiler compiler = MolangCompiler.create();
-        MolangVariable test = MolangVariable.create(1);
+        MolangVariable test = MolangVariable.create(1.0f);
         MolangVariable testImmutable = test.immutable();
 
         MolangExpression expression = compiler.compile("v.test=2");
 
         MolangRuntime runtime = MolangRuntime.runtime().setVariable("test", testImmutable).create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
-        Assertions.assertEquals(1, test.getValue());
+        Assertions.assertEquals(MolangValue.of(1.0f), test.getValue());
     }
 
     @Test
@@ -261,7 +277,7 @@ public class MolangTest {
         MolangExpression expression = compiler.compile("5<5");
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(0.0F, result);
     }
@@ -272,7 +288,7 @@ public class MolangTest {
         MolangExpression expression = compiler.compile("math.sign(-4)");
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(-1.0F, result);
     }
@@ -283,7 +299,7 @@ public class MolangTest {
         MolangExpression expression = compiler.compile("math.triangle_wave(23544/2, 23544)");
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(expression);
+        float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(-1.0F, result);
     }
@@ -315,23 +331,30 @@ public class MolangTest {
 
     @Test
     void testJavaCondition() throws MolangException {
+        record Condition(String action, BiFunction<MolangValue, MolangValue, MolangValue> match) {
+
+        }
+        List<Condition> conditions = new ArrayList<>();
+        conditions.add(new Condition("==", (a, b) -> a.internalEquals(b)));
+        conditions.add(new Condition("!=", (a, b) -> a.internalNotEquals(b)));
+        conditions.add(new Condition(">", (a, b) -> a.internalGreater(b)));
+        conditions.add(new Condition(">=", (a, b) -> a.internalGreaterEquals(b)));
+        conditions.add(new Condition("<", (a, b) -> a.internalLess(b)));
+        conditions.add(new Condition("<=", (a, b) -> a.internalLessEquals(b)));
+
         MolangCompiler compiler = MolangCompiler.create();
-        MolangExpression eq = compiler.compile("query.climb_vertical == 0.0");
-        MolangExpression ne = compiler.compile("query.climb_vertical != 0.0");
-        MolangExpression gt = compiler.compile("query.climb_vertical > 0.0");
-        MolangExpression gteq = compiler.compile("query.climb_vertical >= 0.0");
-        MolangExpression lt = compiler.compile("query.climb_vertical < 0.0");
-        MolangExpression lteq = compiler.compile("query.climb_vertical <= 0.0");
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue b = MolangValue.of(0.0f);
         for (int i = -4; i < 6; i++) {
-            runtime.edit().setQuery("climb_vertical", i);
-            Assertions.assertEquals(i == 0 ? 1.0F : 0.0F, runtime.resolve(eq));
-            Assertions.assertEquals(i != 0 ? 1.0F : 0.0F, runtime.resolve(ne));
-            Assertions.assertEquals(i > 0 ? 1.0F : 0.0F, runtime.resolve(gt));
-            Assertions.assertEquals(i >= 0 ? 1.0F : 0.0F, runtime.resolve(gteq));
-            Assertions.assertEquals(i < 0 ? 1.0F : 0.0F, runtime.resolve(lt));
-            Assertions.assertEquals(i <= 0 ? 1.0F : 0.0F, runtime.resolve(lteq));
+            runtime.edit().setQuery("climb_vertical", (float) i);
+            for (Condition condition : conditions) {
+                String query = "query.climb_vertical " + condition.action + " 0.0";
+                MolangExpression expression = compiler.compile(query);
+                MolangValue result = expression.get(runtime);
+                MolangValue a = MolangValue.of(i);
+                Assertions.assertEquals(condition.match.apply(a, b), result);
+            }
         }
     }
 
@@ -342,10 +365,8 @@ public class MolangTest {
         MolangExpression falseExpression = compiler.compile("false");
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float trueResult = runtime.resolve(trueExpression);
-        float falseResult = runtime.resolve(falseExpression);
-        Assertions.assertEquals(1.0F, trueResult);
-        Assertions.assertEquals(0.0F, falseResult);
+        Assertions.assertEquals(MolangValue.of(true), runtime.resolve(trueExpression));
+        Assertions.assertEquals(MolangValue.of(false), runtime.resolve(falseExpression));
     }
 
     @Test
@@ -367,8 +388,7 @@ public class MolangTest {
                 """);
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(loop);
-        Assertions.assertEquals(10, result);
+        Assertions.assertEquals(MolangValue.of(10.0f), runtime.resolve(loop));
     }
 
     @Test
@@ -382,7 +402,7 @@ public class MolangTest {
                 """);
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
-        float result = runtime.resolve(loop);
+        float result = runtime.resolve(loop).asFloat();
         Assertions.assertEquals(4, result);
     }
 
@@ -394,7 +414,123 @@ public class MolangTest {
         MolangRuntime runtime = MolangRuntime.runtime()
                 .setQuery("testCamel", 4)
                 .create();
-        float result = runtime.resolve(loop);
+        float result = runtime.resolve(loop).asFloat();
         Assertions.assertEquals(4, result);
+    }
+
+    @Test
+    void testStringLiteral() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("\"hello world\"");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+        Assertions.assertEquals(MolangValue.of("hello world"), result);
+    }
+
+    @Test
+    void testStringWithEscapes() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("\"hello \\\"world\\\"\"");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+        Assertions.assertEquals(MolangValue.of("hello \"world\""), result);
+    }
+
+    @Test
+    void testSingleQuotedString() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("'hello world'");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+        Assertions.assertEquals(MolangValue.of("hello world"), result);
+    }
+
+    @Test
+    void testStringEqualityTrue() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("\"purple\" == \"purple\"");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        float result = runtime.resolve(expression).asFloat();
+        System.out.println(expression + "\n==RESULT==\n" + result);
+        Assertions.assertEquals(1.0F, result);
+    }
+
+    @Test
+    void testStringEqualityFalse() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("\"purple\" == \"blue\"");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        float result = runtime.resolve(expression).asFloat();
+        System.out.println(expression + "\n==RESULT==\n" + result);
+        Assertions.assertEquals(0.0F, result);
+    }
+
+    @Test
+    void testStringInequalityTrue() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("'red' != 'blue'");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        float result = runtime.resolve(expression).asFloat();
+        System.out.println(expression + "\n==RESULT==\n" + result);
+        Assertions.assertEquals(1.0F, result);
+    }
+
+    @Test
+    void testStringInequalityFalse() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("'red' != 'red'");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        float result = runtime.resolve(expression).asFloat();
+        System.out.println(expression + "\n==RESULT==\n" + result);
+        Assertions.assertEquals(0.0F, result);
+    }
+
+    @Test
+    void testStringFunctionParameter() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression echoFunction = MolangExpression.function(1, ctx -> ctx.get(0));
+
+        MolangExpression expression = compiler.compile("query.test_func('test')");
+
+        MolangRuntime runtime = MolangRuntime.runtime()
+                .setQuery("test_func", echoFunction)
+                .create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+        Assertions.assertEquals(MolangValue.of("test"), result);
+    }
+
+    @Test
+    void testComplexStringExpression() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+
+        MolangValue teleporterColorValue = MolangValue.of("block_color");
+        MolangValue purpleValue = MolangValue.of("purple");
+        MolangExpression blockStateFunction = MolangExpression.function(1, ctx -> {
+            MolangValue param = ctx.get(0);
+            if (param.equals(teleporterColorValue)) {
+                return purpleValue;
+            }
+            return MolangValue.NULL;
+        });
+
+        MolangExpression expression = compiler.compile("query.block_state('block_color') == 'purple'");
+
+        MolangRuntime runtime = MolangRuntime.runtime()
+                .setQuery("block_state", blockStateFunction)
+                .create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+        Assertions.assertEquals(MolangValue.of(true), result);
     }
 }

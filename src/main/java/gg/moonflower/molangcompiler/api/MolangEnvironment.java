@@ -47,13 +47,14 @@ public interface MolangEnvironment {
     void loadAlias(String name, String first, String... aliases) throws IllegalArgumentException;
 
     /**
-     * Loads a parameter into the next parameter slot.
+     * Loads a MolangValue parameter into the next parameter slot.
      *
      * @param value The value to use as a parameter
      * @throws MolangRuntimeException If there is an issue loading the parameter
-     * @since 3.0.0
+     * @since 3.2.0
      */
-    void loadParameter(float value) throws MolangRuntimeException;
+    void loadParameter(MolangValue value) throws MolangRuntimeException;
+
 
     /**
      * Clears all stored parameters.
@@ -63,7 +64,7 @@ public interface MolangEnvironment {
     /**
      * @return The value of <code>this</code> in MoLang
      */
-    float getThis();
+    MolangValue getThis();
 
     /**
      * Checks if the specified MoLang object exists.
@@ -130,13 +131,14 @@ public interface MolangEnvironment {
     }
 
     /**
-     * Retrieves an expression by the specified parameter index.
+     * Retrieves a MolangValue by the specified parameter index.
      *
      * @param parameter The parameter to fetch
      * @return The parameter value
      * @throws MolangRuntimeException If the parameter does not exist
+     * @since 3.2.0
      */
-    float getParameter(int parameter) throws MolangRuntimeException;
+    MolangValue getParameter(int parameter) throws MolangRuntimeException;
 
     /**
      * Checks to see if a parameter is loaded under the specified index.
@@ -166,7 +168,7 @@ public interface MolangEnvironment {
      * @param thisValue The new value
      * @since 2.0.0
      */
-    void setThisValue(float thisValue);
+    void setThisValue(MolangValue thisValue);
 
     /**
      * @return Whether this environment can be edited
@@ -194,32 +196,32 @@ public interface MolangEnvironment {
     }
 
     /**
-     * <p>Resolves the float value of the specified expression in this environment.</p>
+     * <p>Resolves the value of the specified expression in this environment.</p>
      * <p>This allows environments to fine-tune how expressions are evaluated.</p>
      *
      * @param expression The expression to evaluate
      * @return The resulting value
      * @throws MolangRuntimeException If any error occurs when resolving the value
-     * @since 2.0.0
+     * @since 4.0.0
      */
-    default float resolve(MolangExpression expression) throws MolangRuntimeException {
+    default MolangValue resolve(MolangExpression expression) throws MolangRuntimeException {
         return expression.get(this);
     }
 
     /**
-     * <p>Resolves the float value of the specified expression in this environment. Catches any exception thrown and returns <code>0.0</code>.</p>
+     * <p>Resolves the value of the specified expression in this environment. Catches any exception thrown and returns a zero float.</p>
      * <p>This allows environments to fine-tune how expressions are evaluated.</p>
      *
      * @param expression The expression to evaluate
      * @return The resulting value
-     * @since 2.0.0
+     * @since 4.0.0
      */
-    default float safeResolve(MolangExpression expression) {
+    default MolangValue safeResolve(MolangExpression expression) {
         try {
             return this.resolve(expression);
         } catch (Throwable t) {
             t.printStackTrace();
-            return 0.0F;
+            return MolangValue.of(0.0F);
         }
     }
 

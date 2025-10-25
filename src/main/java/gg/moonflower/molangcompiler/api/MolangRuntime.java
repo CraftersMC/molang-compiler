@@ -16,17 +16,17 @@ import java.util.*;
  */
 public class MolangRuntime implements MolangEnvironment {
 
-    private float thisValue;
+    private MolangValue thisValue;
     private final Map<String, MolangObject> objects;
     private final Map<String, String> aliases;
-    private final List<Float> parameters;
+    private final List<MolangValue> parameters;
 
     private final ImmutableMolangObject query;
     private final ImmutableMolangObject global;
     private final MolangObject variable;
 
     private MolangRuntime(ImmutableMolangObject query, ImmutableMolangObject global, MolangObject variable, Map<String, MolangObject> libraries) {
-        this.thisValue = 0.0F;
+        this.thisValue = MolangValue.of(0.0f);
         this.objects = new HashMap<>();
         this.aliases = new HashMap<>();
         this.objects.putAll(libraries);
@@ -61,7 +61,8 @@ public class MolangRuntime implements MolangEnvironment {
         builder.append("==End Objects==\n\n");
         builder.append("==Start Parameters==\n");
         for (int i = 0; i < this.parameters.size(); i++) {
-            builder.append("\tParameter ").append(i).append('=').append(this.parameters.get(i)).append('\n');
+            MolangValue param = this.parameters.get(i);
+            builder.append("\tParameter ").append(i).append('=').append(param).append(" (").append(param.getType()).append(")\n");
         }
         builder.append("==End Parameters==\n\n");
         builder.append("==End MoLang Runtime Dump==");
@@ -89,8 +90,8 @@ public class MolangRuntime implements MolangEnvironment {
     }
 
     @Override
-    public void loadParameter(float expression) {
-        this.parameters.add(expression);
+    public void loadParameter(MolangValue value) {
+        this.parameters.add(value);
     }
 
     @Override
@@ -99,7 +100,7 @@ public class MolangRuntime implements MolangEnvironment {
     }
 
     @Override
-    public float getThis() {
+    public MolangValue getThis() {
         return this.thisValue;
     }
 
@@ -134,7 +135,7 @@ public class MolangRuntime implements MolangEnvironment {
     }
 
     @Override
-    public float getParameter(int parameter) throws MolangRuntimeException {
+    public MolangValue getParameter(int parameter) throws MolangRuntimeException {
         if (parameter < 0 || parameter >= this.parameters.size()) {
             throw new MolangRuntimeException("No parameter loaded in slot " + parameter);
         }
@@ -152,7 +153,7 @@ public class MolangRuntime implements MolangEnvironment {
     }
 
     @Override
-    public void setThisValue(float thisValue) {
+    public void setThisValue(MolangValue thisValue) {
         this.thisValue = thisValue;
     }
 
