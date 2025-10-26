@@ -80,7 +80,7 @@ public class BytecodeCompiler extends ClassLoader {
         super(parent);
         this.environment = ThreadLocal.withInitial(() -> new MolangBytecodeEnvironment(flags));
         this.writeClasses = (flags & MolangCompiler.WRITE_CLASSES_FLAG) > 0;
-        this.printClasses = true;//(flags & MolangCompiler.PRINT_CLASSES_FLAG) > 0;
+        this.printClasses = (flags & MolangCompiler.PRINT_CLASSES_FLAG) > 0;
     }
 
     /**
