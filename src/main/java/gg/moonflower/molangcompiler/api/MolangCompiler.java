@@ -22,6 +22,8 @@ public interface MolangCompiler {
      */
     int WRITE_CLASSES_FLAG = 0b10;
 
+    int PRINT_CLASSES_FLAG = 0b100;
+
     /**
      * All default compilation flags. This may change in future versions as more options are added.
      */

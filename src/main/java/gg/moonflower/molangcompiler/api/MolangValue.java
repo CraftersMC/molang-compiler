@@ -17,6 +17,8 @@ import java.util.Objects;
 public final class MolangValue {
 
     public static final MolangValue NULL = new MolangValue(Type.NULL, 0.0f, null, false);
+    public static final MolangValue MATH_PI = of((float) Math.PI);
+    public static final MolangValue MATH_E = of((float) Math.E);
 
     private final Type type;
     private final float floatValue;

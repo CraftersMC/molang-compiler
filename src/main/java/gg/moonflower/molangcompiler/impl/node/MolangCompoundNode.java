@@ -21,7 +21,7 @@ public record MolangCompoundNode(MolangExpression... expressions) implements Mol
                 return result;
             }
         }
-        return MolangValue.of(0.0F);
+        return MolangValue.of(0.0f);
     }
 
     @Override

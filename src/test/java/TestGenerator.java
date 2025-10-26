@@ -25,7 +25,7 @@ public class TestGenerator {
 	
 	public static Object gen(Random rnd, boolean java, int depth) {
 		if(depth == 3) {
-			return rnd.nextBoolean() ? rnd.nextInt(1000) + (java ? ".0F" : "") : (java ? "a" : "query.a");
+			return rnd.nextBoolean() ? rnd.nextInt(1000) + (java ? ".0f" : "") : (java ? "a" : "query.a");
 		}
 		
 		return new Term(gen(rnd, java, depth + 1), "+-*/".charAt(rnd.nextInt(4)), gen(rnd, java, depth + 1));

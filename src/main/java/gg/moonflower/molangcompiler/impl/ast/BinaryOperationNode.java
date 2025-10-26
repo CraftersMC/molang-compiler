@@ -36,34 +36,12 @@ public record BinaryOperationNode(BinaryOperation operator, Node left, Node righ
     }
 
     private float evaluateFloat(MolangBytecodeEnvironment environment) throws MolangException {
-        float left = this.left.evaluate(environment).asFloat();
-        float right = this.right.evaluate(environment).asFloat();
-        return switch (this.operator) {
-            case ADD -> left + right;
-            case SUBTRACT -> left - right;
-            case MULTIPLY -> left * right;
-            case DIVIDE -> left / right;
-            case AND -> left != 0 && right != 0 ? 1.0F : 0.0F;
-            case OR -> left != 0 || right != 0 ? 1.0F : 0.0F;
-            case LESS -> left < right ? 1.0F : 0.0F;
-            case LESS_EQUALS -> left <= right ? 1.0F : 0.0F;
-            case GREATER -> left > right ? 1.0F : 0.0F;
-            case GREATER_EQUALS -> left >= right ? 1.0F : 0.0F;
-            case EQUALS -> left == right ? 1.0F : 0.0F;
-            case NOT_EQUALS -> left != right ? 1.0F : 0.0F;
-            // If the left is constant, then the value always exists and returns the first value
-            case NULL_COALESCING -> left;
-        };
-    }
-
-    @Override
-    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
         MolangValue leftValue = this.left.evaluate(environment);
         MolangValue rightValue = this.right.evaluate(environment);
 
         // For string comparisons, handle EQUALS and NOT_EQUALS specially
         if ((this.operator == BinaryOperation.EQUALS || this.operator == BinaryOperation.NOT_EQUALS) &&
-            (leftValue.isString() || rightValue.isString())) {
+                (leftValue.isString() || rightValue.isString())) {
             boolean equal;
             if (leftValue.isString() && rightValue.isString()) {
                 equal = leftValue.getString().equals(rightValue.getString());
@@ -71,11 +49,31 @@ public record BinaryOperationNode(BinaryOperation operator, Node left, Node righ
                 // If types don't match, they're not equal
                 equal = false;
             }
-            float result = (this.operator == BinaryOperation.EQUALS) ? (equal ? 1.0F : 0.0F) : (equal ? 0.0F : 1.0F);
-            return MolangValue.of(result);
+            return (this.operator == BinaryOperation.EQUALS) ? (equal ? 1.0f : 0.0f) : (equal ? 0.0f : 1.0f);
         }
 
-        // For all other operations, use float arithmetic
+        float left = leftValue.asFloat();
+        float right = rightValue.asFloat();
+        return switch (this.operator) {
+            case ADD -> left + right;
+            case SUBTRACT -> left - right;
+            case MULTIPLY -> left * right;
+            case DIVIDE -> left / right;
+            case AND -> left != 0 && right != 0 ? 1.0f : 0.0f;
+            case OR -> left != 0 || right != 0 ? 1.0f : 0.0f;
+            case LESS -> left < right ? 1.0f : 0.0f;
+            case LESS_EQUALS -> left <= right ? 1.0f : 0.0f;
+            case GREATER -> left > right ? 1.0f : 0.0f;
+            case GREATER_EQUALS -> left >= right ? 1.0f : 0.0f;
+            case EQUALS -> left == right ? 1.0f : 0.0f;
+            case NOT_EQUALS -> left != right ? 1.0f : 0.0f;
+            // If the left is constant, then the value always exists and returns the first value
+            case NULL_COALESCING -> left;
+        };
+    }
+
+    @Override
+    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
         return MolangValue.of(this.evaluateFloat(environment));
     }
 
@@ -89,4 +87,13 @@ public record BinaryOperationNode(BinaryOperation operator, Node left, Node righ
                 left, right, operator);
     }
 
+    @Override
+    public void writeBytecodeAsFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        if (environment.optimize() && this.isConstant()) {
+            BytecodeCompiler.writeFloatConst(method, this.evaluateFloat(environment));
+            return;
+        }
+        BytecodeCompiler.writeBinaryOperationAsFloat(method, environment, breakLabel, continueLabel,
+                left, right, operator);
+    }
 }

@@ -46,9 +46,11 @@ public record NegateNode(Node value) implements Node {
         }
 
         this.value.writeBytecode(method, environment, breakLabel, continueLabel);
-        BytecodeCompiler.writeNegate(
-                method, environment, breakLabel, continueLabel,
-                value
+        method.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
+                "gg/moonflower/molangcompiler/api/MolangValue",
+                "negate",
+                "()Lgg/moonflower/molangcompiler/api/MolangValue;",
+                false
         );
     }
 }

@@ -24,7 +24,7 @@ public class StressTest {
     private static long longestTakenTime = 0;
 
     @Test
-    public void main() throws MolangException {
+    void test() throws MolangException {
         test("query.a * query.b * query.c * query.d * query.e * query.f * query.g * query.h", 71192.2148438F,
                 Map.of("a", 1.5F,
                         "b", 5.5F,
@@ -45,98 +45,108 @@ public class StressTest {
                 + "				return v.z;"
                 + "			}"
                 + "		}"
-                + "}", 30.0F, Map.of());
-        test("v.x = 20; loop(30, { v.x = v.x + 1 }); return v.x", 50.0F, Map.of());
+                + "}", 30.0f, Map.of());
+        test("v.x = 20; loop(30, { v.x = v.x + 1 }); return v.x", 50.0f, Map.of());
 
-        test("query.is_dashing * (query.anim_time + query.delta_time)", 8.25F, Map.of("is_dashing", 1.5F, "anim_time", 3.5F, "delta_time", 2.0F));
+        test("query.is_dashing * (query.anim_time + query.delta_time)", 8.25F, Map.of("is_dashing", 1.5F, "anim_time", 3.5F, "delta_time", 2.0f));
         test("query.climb_horizontal > 0.0 ? 1.0 - math.mod(0.25 * query.climb_horizontal, 1.0) : 0.25 * query.climb_horizontal", 0.625F, Map.of("climb_horizontal", 1.5F));
 
-        test("5 + 3", 8.0F, Map.of());
-        test("8 - 6", 2.0F, Map.of());
-        test("6 / 2", 3.0F, Map.of());
-        test("9 / 3", 3.0F, Map.of());
+        test("5 + 3", 8.0f, Map.of());
+        test("8 - 6", 2.0f, Map.of());
+        test("6 / 2", 3.0f, Map.of());
+        test("9 / 3", 3.0f, Map.of());
         test("9 / 0", Float.POSITIVE_INFINITY, Map.of());
-        test("9 * 0", 0.0F, Map.of());
-        test("4 * 3", 12.0F, Map.of());
-        test("3 * 4", 12.0F, Map.of());
-        test("(3*5) * 4", 60.0F, Map.of());
+        test("9 * 0", 0.0f, Map.of());
+        test("4 * 3", 12.0f, Map.of());
+        test("3 * 4", 12.0f, Map.of());
+        test("(3*5) * 4", 60.0f, Map.of());
         test("(4*8) / 10", 3.2F, Map.of());
 
-        test("0 && 0", 0.0F, Map.of());
-        test("0 && 0 && 0", 0.0F, Map.of());
-        test("0 && 0 && 1", 0.0F, Map.of());
-        test("0 && 1", 0.0F, Map.of());
-        test("0 && 1 && 0", 0.0F, Map.of());
-        test("0 && 1 && 1", 0.0F, Map.of());
-        test("1 && 0", 0.0F, Map.of());
-        test("1 && 0 && 0", 0.0F, Map.of());
-        test("1 && 0 && 1", 0.0F, Map.of());
-        test("1 && 1", 1.0F, Map.of());
-        test("1 && 1 && 0", 0.0F, Map.of());
-        test("1 && 1 && 1", 1.0F, Map.of());
-        test("0 || 0", 0.0F, Map.of());
-        test("0 || 1", 1.0F, Map.of());
-        test("1 || 0", 1.0F, Map.of());
-        test("1 || 1", 1.0F, Map.of());
-        test("0 || 0 || 0", 0.0F, Map.of());
-        test("0 || 0 || 1", 1.0F, Map.of());
-        test("0 || 1 || 0", 1.0F, Map.of());
-        test("0 || 1 || 1", 1.0F, Map.of());
-        test("1 || 0 || 0", 1.0F, Map.of());
-        test("1 || 0 || 1", 1.0F, Map.of());
-        test("1 || 1 || 0", 1.0F, Map.of());
-        test("1 || 1 || 1", 1.0F, Map.of());
+        test("0 && 0", 0.0f, Map.of());
+        test("0 && 0 && 0", 0.0f, Map.of());
+        test("0 && 0 && 1", 0.0f, Map.of());
+        test("0 && 1", 0.0f, Map.of());
+        test("0 && 1 && 0", 0.0f, Map.of());
+        test("0 && 1 && 1", 0.0f, Map.of());
+        test("1 && 0", 0.0f, Map.of());
+        test("1 && 0 && 0", 0.0f, Map.of());
+        test("1 && 0 && 1", 0.0f, Map.of());
+        test("1 && 1", 1.0f, Map.of());
+        test("1 && 1 && 0", 0.0f, Map.of());
+        test("1 && 1 && 1", 1.0f, Map.of());
+        test("0 || 0", 0.0f, Map.of());
+        test("0 || 1", 1.0f, Map.of());
+        test("1 || 0", 1.0f, Map.of());
+        test("1 || 1", 1.0f, Map.of());
+        test("0 || 0 || 0", 0.0f, Map.of());
+        test("0 || 0 || 1", 1.0f, Map.of());
+        test("0 || 1 || 0", 1.0f, Map.of());
+        test("0 || 1 || 1", 1.0f, Map.of());
+        test("1 || 0 || 0", 1.0f, Map.of());
+        test("1 || 0 || 1", 1.0f, Map.of());
+        test("1 || 1 || 0", 1.0f, Map.of());
+        test("1 || 1 || 1", 1.0f, Map.of());
 
-        test("10 > 10 ? 1 : 0", 0.0F, Map.of());
-        test("10 < 10 ? 1 : 0", 0.0F, Map.of());
-        test("10 >= 10 ? 1 : 0", 1.0F, Map.of());
-        test("10 <= 10 ? 1 : 0", 1.0F, Map.of());
-        test("5 > 5 ? 1 : 0", 0.0F, Map.of());
-        test("5 < 5 ? 1 : 0", 0.0F, Map.of());
-        test("5 >= 5 ? 1 : 0", 1.0F, Map.of());
-        test("5 <= 5 ? 1 : 0", 1.0F, Map.of());
-        test("5 > 2 ? 1 : 0", 1.0F, Map.of());
-        test("2 > 5 ? 1 : 0", 0.0F, Map.of());
-        test("5 < 2 ? 1 : 0", 0.0F, Map.of());
-        test("2 < 5 ? 1 : 0", 1.0F, Map.of());
+        test("10 > 10 ? 1 : 0", 0.0f, Map.of());
+        test("10 < 10 ? 1 : 0", 0.0f, Map.of());
+        test("10 >= 10 ? 1 : 0", 1.0f, Map.of());
+        test("10 <= 10 ? 1 : 0", 1.0f, Map.of());
+        test("5 > 5 ? 1 : 0", 0.0f, Map.of());
+        test("5 < 5 ? 1 : 0", 0.0f, Map.of());
+        test("5 >= 5 ? 1 : 0", 1.0f, Map.of());
+        test("5 <= 5 ? 1 : 0", 1.0f, Map.of());
+        test("5 > 2 ? 1 : 0", 1.0f, Map.of());
+        test("2 > 5 ? 1 : 0", 0.0f, Map.of());
+        test("5 < 2 ? 1 : 0", 0.0f, Map.of());
+        test("2 < 5 ? 1 : 0", 1.0f, Map.of());
 
-        test("(1 ? 16 : 3)", 16.0F, Map.of());
-        test("(5 ? 10 : 6)", 10.0F, Map.of());
-        test("(0 ? 10 : 9)", 9.0F, Map.of());
+        test("(1 ? 16 : 3)", 16.0f, Map.of());
+        test("(5 ? 10 : 6)", 10.0f, Map.of());
+        test("(0 ? 10 : 9)", 9.0f, Map.of());
 
-        test("query.a*5", 10, Map.of("a", 2.0F));
+        test("query.a*5", 10, Map.of("a", 2.0f));
 
-        for (float a : new float[]{5.0F}) {
-            test("(((948 + (515)) - ((761 * (77)))) - (((query.a * (844)) / ((query.a / (query.a))))))", (((948.0F + (515.0F)) - ((761.0F * (77.0F)))) - (((a * (844.0F)) / ((a / (a)))))), Map.of("a", a));
-            test("(((588 - (query.a)) + ((query.a - (978)))) * (((query.a + (263)) / ((592 / (189))))))", (((588.0F - (a)) + ((a - (978.0F)))) * (((a + (263.0F)) / ((592.0F / (189.0F)))))), Map.of("a", a));
-            test("(((372 / (query.a)) - ((606 + (68)))) / (((query.a + (514)) / ((399 / (678))))))", (((372.0F / (a)) - ((606.0F + (68.0F)))) / (((a + (514.0F)) / ((399.0F / (678.0F)))))), Map.of("a", a));
-            test("(((660 + (128)) * ((564 + (585)))) - (((614 + (query.a)) / ((query.a / (911))))))", (((660.0F + (128.0F)) * ((564.0F + (585.0F)))) - (((614.0F + (a)) / ((a / (911.0F)))))), Map.of("a", a));
-            test("(((452 / (767)) + ((846 + (query.a)))) + (((552 / (52)) + ((662 - (369))))))", (((452.0F / (767.0F)) + ((846.0F + (a)))) + (((552.0F / (52.0F)) + ((662.0F - (369.0F)))))), Map.of("a", a));
-            test("(((92 + (506)) / ((query.a / (query.a)))) - (((303 - (query.a)) / ((978 - (17))))))", (((92.0F + (506.0F)) / ((a / (a)))) - (((303.0F - (a)) / ((978.0F - (17.0F)))))), Map.of("a", a));
-            test("(((876 * (query.a)) / ((377 + (query.a)))) * (((268 * (29)) + ((query.a / (58))))))", (((876.0F * (a)) / ((377.0F + (a)))) * (((268.0F * (29.0F)) + ((a / (58.0F)))))), Map.of("a", a));
-            test("(((164 * (query.a)) - ((query.a / (850)))) * (((query.a / (query.a)) - ((662 + (307))))))", (((164.0F * (a)) - ((a / (850.0F)))) * (((a / (a)) - ((662.0F + (307.0F)))))), Map.of("a", a));
-            test("(((956 * (query.a)) + ((query.a / (query.a)))) * (((query.a * (query.a)) + ((828 * (query.a))))))", (((956.0F * (a)) + ((a / (a)))) * (((a * (a)) + ((828.0F * (a)))))), Map.of("a", a));
-            test("(((596 / (759)) / ((776 / (query.a)))) - (((query.a * (295)) + ((query.a + (844))))))", (((596.0F / (759.0F)) / ((776.0F / (a)))) - (((a * (295.0F)) + ((a + (844.0F)))))), Map.of("a", a));
-            test("(((380 - (query.a)) + ((797 - (214)))) - (((591 / (480)) - ((query.a / (query.a))))))", (((380.0F - (a)) + ((797.0F - (214.0F)))) - (((591.0F / (480.0F)) - ((a / (a)))))), Map.of("a", a));
-            test("(((668 - (query.a)) * ((query.a + (593)))) - (((query.a * (query.a)) - ((518 - (query.a))))))", (((668.0F - (a)) * ((a + (593.0F)))) - (((a * (a)) - ((518.0F - (a)))))), Map.of("a", a));
-            test("(((812 - (query.a)) - ((query.a / (596)))) / (((query.a + (query.a)) + ((query.a / (31))))))", (((812.0F - (a)) - ((a / (596.0F)))) / (((a + (a)) + ((a / (31.0F)))))), Map.of("a", a));
-            test("(((100 - (query.a)) + ((693 + (query.a)))) / (((query.a / (155)) - ((query.a / (860))))))", (((100.0F - (a)) + ((693.0F + (a)))) / (((a / (155.0F)) - ((a / (860.0F)))))), Map.of("a", a));
-            test("(((884 / (498)) * ((query.a * (query.a)))) + (((query.a - (query.a)) + ((336 * (794))))))", (((884.0F / (498.0F)) * ((a * (a)))) + (((a - (a)) + ((336.0F * (794.0F)))))), Map.of("a", a));
-            test("(((172 + (query.a)) / ((query.a + (query.a)))) * (((query.a * (query.a)) * ((228 - (292))))))", (((172.0F + (a)) / ((a + (a)))) * (((a * (a)) * ((228.0F - (292.0F)))))), Map.of("a", a));
+        for (float a : new float[]{5.0f}) {
+            test("(((948 + (515)) - ((761 * (77)))) - (((query.a * (844)) / ((query.a / (query.a))))))", (((948.0f + (515.0f)) - ((761.0f * (77.0f)))) - (((a * (844.0f)) / ((a / (a)))))), Map.of("a", a));
+            test("(((588 - (query.a)) + ((query.a - (978)))) * (((query.a + (263)) / ((592 / (189))))))", (((588.0f - (a)) + ((a - (978.0f)))) * (((a + (263.0f)) / ((592.0f / (189.0f)))))), Map.of("a", a));
+            test("(((372 / (query.a)) - ((606 + (68)))) / (((query.a + (514)) / ((399 / (678))))))", (((372.0f / (a)) - ((606.0f + (68.0f)))) / (((a + (514.0f)) / ((399.0f / (678.0f)))))), Map.of("a", a));
+            test("(((660 + (128)) * ((564 + (585)))) - (((614 + (query.a)) / ((query.a / (911))))))", (((660.0f + (128.0f)) * ((564.0f + (585.0f)))) - (((614.0f + (a)) / ((a / (911.0f)))))), Map.of("a", a));
+            test("(((452 / (767)) + ((846 + (query.a)))) + (((552 / (52)) + ((662 - (369))))))", (((452.0f / (767.0f)) + ((846.0f + (a)))) + (((552.0f / (52.0f)) + ((662.0f - (369.0f)))))), Map.of("a", a));
+            test("(((92 + (506)) / ((query.a / (query.a)))) - (((303 - (query.a)) / ((978 - (17))))))", (((92.0f + (506.0f)) / ((a / (a)))) - (((303.0f - (a)) / ((978.0f - (17.0f)))))), Map.of("a", a));
+            test("(((876 * (query.a)) / ((377 + (query.a)))) * (((268 * (29)) + ((query.a / (58))))))", (((876.0f * (a)) / ((377.0f + (a)))) * (((268.0f * (29.0f)) + ((a / (58.0f)))))), Map.of("a", a));
+            test("(((164 * (query.a)) - ((query.a / (850)))) * (((query.a / (query.a)) - ((662 + (307))))))", (((164.0f * (a)) - ((a / (850.0f)))) * (((a / (a)) - ((662.0f + (307.0f)))))), Map.of("a", a));
+            test("(((956 * (query.a)) + ((query.a / (query.a)))) * (((query.a * (query.a)) + ((828 * (query.a))))))", (((956.0f * (a)) + ((a / (a)))) * (((a * (a)) + ((828.0f * (a)))))), Map.of("a", a));
+            test("(((596 / (759)) / ((776 / (query.a)))) - (((query.a * (295)) + ((query.a + (844))))))", (((596.0f / (759.0f)) / ((776.0f / (a)))) - (((a * (295.0f)) + ((a + (844.0f)))))), Map.of("a", a));
+            test("(((380 - (query.a)) + ((797 - (214)))) - (((591 / (480)) - ((query.a / (query.a))))))", (((380.0f - (a)) + ((797.0f - (214.0f)))) - (((591.0f / (480.0f)) - ((a / (a)))))), Map.of("a", a));
+            test("(((668 - (query.a)) * ((query.a + (593)))) - (((query.a * (query.a)) - ((518 - (query.a))))))", (((668.0f - (a)) * ((a + (593.0f)))) - (((a * (a)) - ((518.0f - (a)))))), Map.of("a", a));
+            test("(((812 - (query.a)) - ((query.a / (596)))) / (((query.a + (query.a)) + ((query.a / (31))))))", (((812.0f - (a)) - ((a / (596.0f)))) / (((a + (a)) + ((a / (31.0f)))))), Map.of("a", a));
+            test("(((100 - (query.a)) + ((693 + (query.a)))) / (((query.a / (155)) - ((query.a / (860))))))", (((100.0f - (a)) + ((693.0f + (a)))) / (((a / (155.0f)) - ((a / (860.0f)))))), Map.of("a", a));
+            test("(((884 / (498)) * ((query.a * (query.a)))) + (((query.a - (query.a)) + ((336 * (794))))))", (((884.0f / (498.0f)) * ((a * (a)))) + (((a - (a)) + ((336.0f * (794.0f)))))), Map.of("a", a));
+            test("(((172 + (query.a)) / ((query.a + (query.a)))) * (((query.a * (query.a)) * ((228 - (292))))))", (((172.0f + (a)) / ((a + (a)))) * (((a * (a)) * ((228.0f - (292.0f)))))), Map.of("a", a));
         }
 
         System.out.println();
-        System.out.println("Parsing time: " + formatTime(elapsedParsingTime));
-        System.out.println("Execution (with bytecode): " + formatTime(elapsedExecutingBytecodeTime));
-        System.out.println("Longest taken: " + longestTaken + " " + formatTime(longestTakenTime));
+        System.out.println("\n──── Summary ────────────────────────────────");
+        System.out.printf("Total parsing time     : %s%n", formatTime(elapsedParsingTime));
+        System.out.printf("Avg parsing time     : %s%n", formatTime(elapsedParsingTime / (double) TEST_COUNT));
+        System.out.printf("Total execution time   : %s%n", formatTime(elapsedExecutingBytecodeTime));
+        System.out.printf("Longest single exec    : %s  (\"%s\")%n", formatTime(longestTakenTime), longestTaken);
+        System.out.printf("Average exec per test  : %s%n", formatTime(elapsedExecutingBytecodeTime / (double) TEST_COUNT));
+        System.out.println("─────────────────────────────────────────────");
 
 //        if (longestTaken != null) {
 //            DEBUG_COMPILER.compile(longestTaken);
 //        }
     }
 
-    private static String formatTime(long t) {
-        return Math.round(t) / 1000.0D + "ms";
+    private static String formatTime(double ns) {
+        if (ns < 1_000) // <1 µs
+            return String.format("%.2fns", ns);
+        if (ns < 1_000_000) // <1 ms
+            return String.format("%.2fµs", ns / 1_000.0);
+        if (ns < 1_000_000_000) // <1 s
+            return String.format("%.2fms", ns / 1_000_000.0);
+        return String.format("%.2fs", ns / 1_000_000_000.0);
     }
 
     public static void test(String expr, float exp, Map<String, Float> vars) throws MolangException {
@@ -148,7 +158,7 @@ public class StressTest {
 
         long time = System.nanoTime();
         MolangExpression expression = COMPILER.compile(expr);
-        elapsedParsingTime += (System.nanoTime() - time) / 1000;
+        elapsedParsingTime += (System.nanoTime() - time);
 
         time = System.nanoTime();
         for (int i = 0; i < TEST_COUNT; i++) {
@@ -157,7 +167,7 @@ public class StressTest {
         if (PREVENT_OPTIMIZING[0] != exp) {
             throw new RuntimeException("Invalid bytecode value. Expected " + exp + ", but got " + PREVENT_OPTIMIZING[0] + " in expr \"" + expr + "\" transformed to \"" + expression + "\"");
         }
-        long t = (System.nanoTime() - time) / 1000;
+        long t = (System.nanoTime() - time);
         if (t > longestTakenTime) {
             longestTakenTime = t;
             longestTaken = expr;

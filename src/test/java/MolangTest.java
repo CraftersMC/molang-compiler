@@ -279,7 +279,7 @@ public class MolangTest {
         MolangRuntime runtime = MolangRuntime.runtime().create();
         float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
-        Assertions.assertEquals(0.0F, result);
+        Assertions.assertEquals(0.0f, result);
     }
 
     @Test
@@ -290,7 +290,7 @@ public class MolangTest {
         MolangRuntime runtime = MolangRuntime.runtime().create();
         float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
-        Assertions.assertEquals(-1.0F, result);
+        Assertions.assertEquals(-1.0f, result);
     }
 
     @Test
@@ -301,7 +301,7 @@ public class MolangTest {
         MolangRuntime runtime = MolangRuntime.runtime().create();
         float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
-        Assertions.assertEquals(-1.0F, result);
+        Assertions.assertEquals(-1.0f, result);
     }
 
     @Test
@@ -459,7 +459,7 @@ public class MolangTest {
         MolangRuntime runtime = MolangRuntime.runtime().create();
         float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
-        Assertions.assertEquals(1.0F, result);
+        Assertions.assertEquals(1.0f, result);
     }
 
     @Test
@@ -470,7 +470,7 @@ public class MolangTest {
         MolangRuntime runtime = MolangRuntime.runtime().create();
         float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
-        Assertions.assertEquals(0.0F, result);
+        Assertions.assertEquals(0.0f, result);
     }
 
     @Test
@@ -481,7 +481,7 @@ public class MolangTest {
         MolangRuntime runtime = MolangRuntime.runtime().create();
         float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
-        Assertions.assertEquals(1.0F, result);
+        Assertions.assertEquals(1.0f, result);
     }
 
     @Test
@@ -492,7 +492,7 @@ public class MolangTest {
         MolangRuntime runtime = MolangRuntime.runtime().create();
         float result = runtime.resolve(expression).asFloat();
         System.out.println(expression + "\n==RESULT==\n" + result);
-        Assertions.assertEquals(0.0F, result);
+        Assertions.assertEquals(0.0f, result);
     }
 
     @Test

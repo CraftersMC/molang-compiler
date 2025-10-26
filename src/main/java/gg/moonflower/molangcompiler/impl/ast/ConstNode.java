@@ -46,4 +46,19 @@ public record ConstNode(MolangValue value) implements Node {
     public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
         BytecodeCompiler.writeConst(method, this.value);
     }
+
+    @Override
+    public void writeBytecodeAsFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        BytecodeCompiler.writeFloatConst(method, this.value.asFloat());
+    }
+
+    @Override
+    public void writeBytecodeAsTruncatedFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        BytecodeCompiler.writeFloatConst(method, (int) this.value.asFloat());
+    }
+
+    @Override
+    public void writeBytecodeAsRoundedFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        BytecodeCompiler.writeFloatConst(method, Math.round(this.value.asFloat()));
+    }
 }

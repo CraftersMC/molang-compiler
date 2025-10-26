@@ -36,20 +36,38 @@ public record LoopNode(Node iterations, Node body) implements Node {
 
     @Override
     public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        Label begin = new Label();
+        boolean bodyHasValue = this.body.hasValue();
+
+        if (this.iterations.isConstant()) {
+            // constant iterations
+            int iterations = (int) this.iterations.evaluate(environment).asFloat();
+            if (iterations < 128) {
+                Label end = new Label();
+                for (int i = 0; i < iterations; i++) {
+                    Label next = new Label();
+                    this.body.writeBytecode(method, environment, end, next);
+                    if (bodyHasValue) { // Must return void
+                        method.visitInsn(Opcodes.POP);
+                    }
+                    method.visitLabel(next);
+                }
+                method.visitLabel(end);
+                return;
+            }
+        }
+
         Label next = new Label();
         Label end = new Label();
-
+        Label begin = new Label();
         // iterations
-        this.iterations.writeBytecode(method, environment, breakLabel, continueLabel);
-        BytecodeCompiler.unwrapFloat(method);
+        this.iterations.writeBytecodeAsFloat(method, environment, breakLabel, continueLabel);
         method.visitInsn(Opcodes.F2I);
 
         BytecodeCompiler.writeIntConst(method, 0); // int i = 0;
         method.visitLabel(begin);
 
         this.body.writeBytecode(method, environment, end, next);
-        if (this.body.hasValue()) { // Must return void
+        if (bodyHasValue) { // Must return void
             method.visitInsn(Opcodes.POP);
         }
 

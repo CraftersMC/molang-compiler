@@ -221,7 +221,7 @@ public interface MolangEnvironment {
             return this.resolve(expression);
         } catch (Throwable t) {
             t.printStackTrace();
-            return MolangValue.of(0.0F);
+            return MolangValue.of(0.0f);
         }
     }
 

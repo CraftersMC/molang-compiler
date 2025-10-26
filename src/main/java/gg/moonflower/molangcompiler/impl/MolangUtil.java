@@ -126,13 +126,13 @@ public class MolangUtil {
      * @return The wrapped angle in degrees
      */
     public static float wrapDegrees(float angle) {
-        float wrapped = angle % 360.0F;
-        if (wrapped >= 180.0F) {
-            wrapped -= 360.0F;
+        float wrapped = angle % 360.0f;
+        if (wrapped >= 180.0f) {
+            wrapped -= 360.0f;
         }
 
-        if (wrapped < -180.0F) {
-            wrapped += 360.0F;
+        if (wrapped < -180.0f) {
+            wrapped += 360.0f;
         }
 
         return wrapped;

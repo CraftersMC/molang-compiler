@@ -78,7 +78,7 @@ public record FunctionNode(String object, String function, Node... arguments) im
             );
         }
 
-        // Resolve Function (call getAsFloat instead of deprecated resolve)
+        // Resolve Function
         method.visitVarInsn(Opcodes.ALOAD, expressionIndex);
         method.visitVarInsn(Opcodes.ALOAD, BytecodeCompiler.RUNTIME_INDEX);
         method.visitMethodInsn(

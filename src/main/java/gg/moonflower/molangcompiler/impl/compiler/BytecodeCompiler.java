@@ -15,7 +15,9 @@ import org.objectweb.asm.Label;
 import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.ClassNode;
 import org.objectweb.asm.tree.MethodNode;
+import org.objectweb.asm.util.TraceClassVisitor;
 
+import java.io.PrintWriter;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -66,6 +68,7 @@ public class BytecodeCompiler extends ClassLoader {
 
     private final ThreadLocal<MolangBytecodeEnvironment> environment;
     private final boolean writeClasses;
+    private final boolean printClasses;
 
     /**
      * Creates a new bytecode compiler with the specified flags and parent class loader.
@@ -77,6 +80,7 @@ public class BytecodeCompiler extends ClassLoader {
         super(parent);
         this.environment = ThreadLocal.withInitial(() -> new MolangBytecodeEnvironment(flags));
         this.writeClasses = (flags & MolangCompiler.WRITE_CLASSES_FLAG) > 0;
+        this.printClasses = true;//(flags & MolangCompiler.PRINT_CLASSES_FLAG) > 0;
     }
 
     /**
@@ -191,9 +195,12 @@ public class BytecodeCompiler extends ClassLoader {
 
 
             ClassWriter cw = new ClassWriter(ClassWriter.COMPUTE_FRAMES | ClassWriter.COMPUTE_MAXS);
-            /*TraceClassVisitor tcv = new TraceClassVisitor(cw, new PrintWriter(System.out));
-            classNode.accept(tcv);*/
-            classNode.accept(cw);
+            if (printClasses) {
+                TraceClassVisitor tcv = new TraceClassVisitor(cw, new PrintWriter(System.out));
+                classNode.accept(tcv);
+            } else {
+                classNode.accept(cw);
+            }
             byte[] data = cw.toByteArray();
 
             if (this.writeClasses) {
@@ -266,11 +273,11 @@ public class BytecodeCompiler extends ClassLoader {
      * @param value  The float constant to push
      */
     public static void writeFloatConst(MethodNode method, float value) {
-        if (value == 0.0F) {
+        if (value == 0.0f) {
             method.visitInsn(Opcodes.FCONST_0);
-        } else if (value == 1.0F) {
+        } else if (value == 1.0f) {
             method.visitInsn(Opcodes.FCONST_1);
-        } else if (value == 2.0F) {
+        } else if (value == 2.0f) {
             method.visitInsn(Opcodes.FCONST_2);
         } else {
             method.visitLdcInsn(value);
@@ -304,31 +311,6 @@ public class BytecodeCompiler extends ClassLoader {
                 }
             }
         }
-    }
-
-    /**
-     * Writes bytecode to negate a MolangValue expression.
-     * <p>
-     * This generates code that evaluates the node and calls {@link MolangValue#negate} on the result.
-     *
-     * @param method        The method node to write instructions to
-     * @param environment   The bytecode environment for compilation context
-     * @param breakLabel    Label for break statements (null if not in a loop)
-     * @param continueLabel Label for continue statements (null if not in a loop)
-     * @param node          The node to negate
-     * @throws MolangException if bytecode generation fails
-     */
-    public static void writeNegate(
-            MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel,
-            Node node) throws MolangException {
-        // push left
-        node.writeBytecode(method, environment, breakLabel, continueLabel);
-        method.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
-                "gg/moonflower/molangcompiler/api/MolangValue",
-                "negate",
-                "(Lgg/moonflower/molangcompiler/api/MolangValue;)Lgg/moonflower/molangcompiler/api/MolangValue;",
-                false
-        );
     }
 
     /**
@@ -400,6 +382,14 @@ public class BytecodeCompiler extends ClassLoader {
                 "(Lgg/moonflower/molangcompiler/api/MolangValue;)Lgg/moonflower/molangcompiler/api/MolangValue;",
                 false
         );
+    }
+
+    public static void writeBinaryOperationAsFloat(
+            MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel,
+            Node left, Node right, BinaryOperation op) throws MolangException {
+        writeBinaryOperation(method, environment, breakLabel, continueLabel, left, right, op);
+        // Unwrap the result back to a float
+        unwrapFloat(method);
     }
 
     /**

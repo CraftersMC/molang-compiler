@@ -2,10 +2,12 @@ package gg.moonflower.molangcompiler.impl.ast;
 
 import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
 import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
+import org.objectweb.asm.Opcodes;
 import org.objectweb.asm.tree.MethodNode;
 
 /**
@@ -93,5 +95,22 @@ public interface Node {
      */
     default void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
         throw new MolangException("Not implemented (" + this.getClass().getSimpleName() + " " + this + ")");
+    }
+
+    default void writeBytecodeAsFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        writeBytecode(method, environment, breakLabel, continueLabel);
+        BytecodeCompiler.unwrapFloat(method);
+    }
+
+    default void writeBytecodeAsTruncatedFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        writeBytecodeAsFloat(method, environment, breakLabel, continueLabel);
+        method.visitInsn(Opcodes.F2I);
+        method.visitInsn(Opcodes.I2F);
+    }
+
+    default void writeBytecodeAsRoundedFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        writeBytecodeAsFloat(method, environment, breakLabel, continueLabel);
+        method.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", MathOperation.ROUND.getName(), "(F)I", false);
+        method.visitInsn(Opcodes.I2F);
     }
 }
