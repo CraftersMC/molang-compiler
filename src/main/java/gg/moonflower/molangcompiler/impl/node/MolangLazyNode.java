@@ -49,7 +49,7 @@ public class MolangLazyNode implements MolangExpression {
             return false;
         }
         MolangLazyNode that = (MolangLazyNode) o;
-        return this.value.get().equals(that.value.get());
+        return this.value.get().equalsValue(that.value.get());
     }
 
     @Override

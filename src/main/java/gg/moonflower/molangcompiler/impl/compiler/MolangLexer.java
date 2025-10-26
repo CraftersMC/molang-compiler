@@ -137,6 +137,8 @@ public final class MolangLexer {
         RIGHT_PARENTHESIS("\\)"),
         LEFT_BRACE("\\{"),
         RIGHT_BRACE("\\}"),
+        LEFT_BRACKET("\\["),
+        RIGHT_BRACKET("\\]"),
         DOT("\\."),
         COMMA("\\,"),
         EQUAL("="),
@@ -189,7 +191,7 @@ public final class MolangLexer {
          * @return true if this token marks the end of a scope
          */
         public boolean isOutOfScope() {
-            return this == RIGHT_PARENTHESIS || this == RIGHT_BRACE || this == COMMA;
+            return this == RIGHT_PARENTHESIS || this == RIGHT_BRACE || this == RIGHT_BRACKET || this == COMMA;
         }
     }
 }

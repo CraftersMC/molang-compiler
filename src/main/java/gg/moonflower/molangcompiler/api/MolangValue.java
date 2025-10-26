@@ -3,6 +3,7 @@ package gg.moonflower.molangcompiler.api;
 import gg.moonflower.molangcompiler.impl.MolangUtil;
 import org.jetbrains.annotations.ApiStatus;
 
+import java.util.Arrays;
 import java.util.Objects;
 
 /**
@@ -16,7 +17,7 @@ import java.util.Objects;
 @ApiStatus.NonExtendable
 public final class MolangValue {
 
-    public static final MolangValue NULL = new MolangValue(Type.NULL, 0.0f, null, false);
+    public static final MolangValue NULL = new MolangValue(Type.NULL, 0.0f, null, false, null);
     public static final MolangValue MATH_PI = of((float) Math.PI);
     public static final MolangValue MATH_E = of((float) Math.E);
 
@@ -24,12 +25,14 @@ public final class MolangValue {
     private final float floatValue;
     private final String stringValue;
     private final boolean boolValue;
+    private final MolangValue[] arrayValue;
 
-    private MolangValue(Type type, float floatValue, String stringValue, boolean boolValue) {
+    private MolangValue(Type type, float floatValue, String stringValue, boolean boolValue, MolangValue[] arrayValue) {
         this.type = type;
         this.floatValue = floatValue;
         this.stringValue = stringValue;
         this.boolValue = boolValue;
+        this.arrayValue = arrayValue;
     }
 
     /**
@@ -39,11 +42,11 @@ public final class MolangValue {
      * @return A new MolangValue containing the float
      */
     public static MolangValue of(float value) {
-        return new MolangValue(Type.FLOAT, value, null, false);
+        return new MolangValue(Type.FLOAT, value, null, false, null);
     }
 
     public static MolangValue of(boolean value) {
-        return new MolangValue(Type.BOOLEAN, 0.0f, null, value);
+        return new MolangValue(Type.BOOLEAN, 0.0f, null, value, null);
     }
 
     /**
@@ -54,7 +57,18 @@ public final class MolangValue {
      */
     public static MolangValue of(String value) {
         Objects.requireNonNull(value, "String condition cannot be null");
-        return new MolangValue(Type.STRING, 0.0f, value, false);
+        return new MolangValue(Type.STRING, 0.0f, value, false, null);
+    }
+
+    /**
+     * Creates a MolangValue from an array.
+     *
+     * @param value The array of MolangValues
+     * @return A new MolangValue containing the array
+     */
+    public static MolangValue of(MolangValue[] value) {
+        Objects.requireNonNull(value, "Array cannot be null");
+        return new MolangValue(Type.ARRAY, 0.0f, null, false, Arrays.copyOf(value, value.length));
     }
 
     public static MolangValue ofNull() {
@@ -83,6 +97,13 @@ public final class MolangValue {
     }
 
     /**
+     * @return Whether this condition is an array
+     */
+    public boolean isArray() {
+        return this.type == Type.ARRAY;
+    }
+
+    /**
      * Gets this condition as a float. If this is a string, returns the hash code as a float.
      *
      * @return The float representation of this condition
@@ -93,6 +114,7 @@ public final class MolangValue {
             case STRING -> MolangUtil.safeStringToFloat(this.stringValue);
             case BOOLEAN -> this.boolValue ? 1.0f : 0.0f;
             case NULL -> 0.0f;
+            case ARRAY -> this.arrayValue.length > 0 ? this.arrayValue[0].asFloat() : 0.0f;
         };
     }
 
@@ -102,6 +124,7 @@ public final class MolangValue {
             case STRING -> MolangUtil.safeStringToBool(this.stringValue);
             case BOOLEAN -> this.boolValue;
             case NULL -> false;
+            case ARRAY -> this.arrayValue.length > 0;
         };
     }
 
@@ -116,6 +139,15 @@ public final class MolangValue {
             case STRING -> this.stringValue;
             case BOOLEAN -> Boolean.toString(this.boolValue);
             case NULL -> null;
+            case ARRAY -> {
+                StringBuilder sb = new StringBuilder("[");
+                for (int i = 0; i < this.arrayValue.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(this.arrayValue[i].asString());
+                }
+                sb.append("]");
+                yield sb.toString();
+            }
         };
     }
 
@@ -152,6 +184,19 @@ public final class MolangValue {
         return this.boolValue;
     }
 
+    /**
+     * Gets the raw array without conversion.
+     *
+     * @return The array
+     * @throws IllegalStateException If this condition is not an array
+     */
+    public MolangValue[] getArray() {
+        if (this.type != Type.ARRAY) {
+            throw new IllegalStateException("Value is not an array");
+        }
+        return this.arrayValue;
+    }
+
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
@@ -164,9 +209,27 @@ public final class MolangValue {
                 case STRING -> this.stringValue.equals(other.stringValue);
                 case BOOLEAN -> this.boolValue == other.boolValue;
                 case NULL -> true;
+                case ARRAY -> java.util.Arrays.equals(this.arrayValue, other.arrayValue);
             };
         }
-        // If types don't match, compare as floats for backward compatibility
+        return false;
+    }
+
+    public boolean equalsValue(Object obj) {
+        if (this == obj) return true;
+        if (!(obj instanceof MolangValue other)) return false;
+
+        // If types match, compare directly
+        if (this.type == other.type) {
+            return switch (this.type) {
+                case FLOAT -> Float.compare(this.floatValue, other.floatValue) == 0;
+                case STRING -> this.stringValue.equals(other.stringValue);
+                case BOOLEAN -> this.boolValue == other.boolValue;
+                case NULL -> true;
+                case ARRAY -> java.util.Arrays.equals(this.arrayValue, other.arrayValue);
+            };
+        }
+        // If types don't match, compare as float
         return Float.compare(this.asFloat(), other.asFloat()) == 0;
     }
 
@@ -177,6 +240,7 @@ public final class MolangValue {
             case STRING -> this.stringValue.hashCode();
             case BOOLEAN -> Boolean.hashCode(this.boolValue);
             case NULL -> 0;
+            case ARRAY -> java.util.Arrays.hashCode(this.arrayValue);
         };
     }
 
@@ -187,6 +251,15 @@ public final class MolangValue {
             case STRING -> "\"" + this.stringValue + "\"";
             case BOOLEAN -> Boolean.toString(this.boolValue);
             case NULL -> "null";
+            case ARRAY -> {
+                StringBuilder sb = new StringBuilder("[");
+                for (int i = 0; i < this.arrayValue.length; i++) {
+                    if (i > 0) sb.append(", ");
+                    sb.append(this.arrayValue[i].toString());
+                }
+                sb.append("]");
+                yield sb.toString();
+            }
         };
     }
 
@@ -222,15 +295,16 @@ public final class MolangValue {
             case BOOLEAN -> MolangValue.of(!boolValue);
             case STRING -> this; // ?? todo
             case NULL -> this;
+            case ARRAY -> this;
         };
     }
 
     public MolangValue internalEquals(MolangValue other) {
-        return MolangValue.of(this.equals(other));
+        return MolangValue.of(this.equalsValue(other));
     }
 
     public MolangValue internalNotEquals(MolangValue other) {
-        return MolangValue.of(!this.equals(other));
+        return MolangValue.of(!this.equalsValue(other));
     }
 
     public MolangValue internalLess(MolangValue other) {
@@ -285,6 +359,10 @@ public final class MolangValue {
          */
         STRING,
         BOOLEAN,
-        NULL
+        NULL,
+        /**
+         * An array of MolangValues.
+         */
+        ARRAY
     }
 }

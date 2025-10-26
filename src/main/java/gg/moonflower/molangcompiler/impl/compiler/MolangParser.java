@@ -279,6 +279,31 @@ public final class MolangParser {
                 reader.skip();
                 yield new ScopeNode(node);
             }
+            case LEFT_BRACKET -> {
+                reader.skip();
+                List<Node> elements = new ArrayList<>();
+
+                // Handle empty array
+                if (reader.canRead() && reader.peek().type() == MolangLexer.TokenType.RIGHT_BRACKET) {
+                    reader.skip();
+                    yield new ArrayLiteralNode(new Node[0]);
+                }
+
+                // Parse array elements
+                while (reader.canRead()) {
+                    elements.add(parseExpression(reader));
+
+                    if (reader.canRead() && reader.peek().type() == MolangLexer.TokenType.COMMA) {
+                        reader.skip();
+                        continue;
+                    }
+                    break;
+                }
+
+                expect(reader, MolangLexer.TokenType.RIGHT_BRACKET);
+                reader.skip();
+                yield new ArrayLiteralNode(elements.toArray(Node[]::new));
+            }
             case SPECIAL -> {
                 switch (token.value()) {
                     case "!" -> {
@@ -325,6 +350,14 @@ public final class MolangParser {
                         throw error("Unexpected token", reader);
                     }
                     result = parseNode(reader);
+                }
+                case LEFT_BRACKET -> {
+                    // Array access: result[index]
+                    reader.skip();
+                    Node index = parseExpression(reader);
+                    expect(reader, MolangLexer.TokenType.RIGHT_BRACKET);
+                    reader.skip();
+                    result = new ArrayAccessNode(result, index);
                 }
                 case NULL_COALESCING -> {
                     reader.skip();

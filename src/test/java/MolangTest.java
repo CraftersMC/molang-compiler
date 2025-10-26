@@ -530,7 +530,7 @@ public class MolangTest {
         MolangValue purpleValue = MolangValue.of("purple");
         MolangExpression blockStateFunction = MolangExpression.function(1, ctx -> {
             MolangValue param = ctx.get(0);
-            if (param.equals(teleporterColorValue)) {
+            if (param.equalsValue(teleporterColorValue)) {
                 return purpleValue;
             }
             return MolangValue.NULL;
@@ -545,4 +545,234 @@ public class MolangTest {
         System.out.println(expression + "\n==RESULT==\n" + result);
         Assertions.assertEquals(MolangValue.of(true), result);
     }
+
+    @Test
+    void testArrayLiteral() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("[1, 2, 3]");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+
+        Assertions.assertTrue(result.isArray());
+        MolangValue[] array = result.getArray();
+        Assertions.assertEquals(3, array.length);
+        Assertions.assertEquals(1.0f, array[0].asFloat());
+        Assertions.assertEquals(2.0f, array[1].asFloat());
+        Assertions.assertEquals(3.0f, array[2].asFloat());
+    }
+
+    @Test
+    void testArrayAccess() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("[10, 20, 30][1]");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+
+        Assertions.assertEquals(20.0f, result.asFloat());
+    }
+
+    @Test
+    void testArrayWithStrings() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("[\"hello\", \"world\", \"test\"]");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+
+        Assertions.assertTrue(result.isArray());
+        MolangValue[] array = result.getArray();
+        Assertions.assertEquals(3, array.length);
+        Assertions.assertEquals("hello", array[0].getString());
+        Assertions.assertEquals("world", array[1].getString());
+        Assertions.assertEquals("test", array[2].getString());
+    }
+
+    @Test
+    void testArrayIndexWithExpression() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("[100, 200, 300][1 + 1]");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+
+        Assertions.assertEquals(300.0f, result.asFloat());
+    }
+
+    @Test
+    void testEmptyArray() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("[]");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+
+        Assertions.assertTrue(result.isArray());
+        Assertions.assertEquals(0, result.getArray().length);
+    }
+
+    @Test
+    void testNestedArrayAccess() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("[[1, 2], [3, 4], [5, 6]][1][0]");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+
+        Assertions.assertEquals(3.0f, result.asFloat());
+    }
+
+    @Test
+    void testArrayWithExpressions() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("[1 + 1, 2 * 3, 10 - 4]");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+
+        Assertions.assertTrue(result.isArray());
+        MolangValue[] array = result.getArray();
+        Assertions.assertEquals(3, array.length);
+        Assertions.assertEquals(2.0f, array[0].asFloat());
+        Assertions.assertEquals(6.0f, array[1].asFloat());
+        Assertions.assertEquals(6.0f, array[2].asFloat());
+    }
+
+    @Test
+    void testArrayStoredInVariable() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("""
+                v.my_array = [10, 20, 30, 40, 50];
+                return v.my_array[2];
+                """);
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+
+        Assertions.assertEquals(MolangValue.of(30.0f), result);
+    }
+
+    @Test
+    void testArrayInVariableMultipleAccesses() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("""
+                v.colors = ["red", "green", "blue"];
+                v.first = v.colors[0];
+                v.second = v.colors[1];
+                v.third = v.colors[2];
+                return v.second;
+                """);
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+
+        Assertions.assertEquals(MolangValue.of("green"), result);
+    }
+
+    @Test
+    void testArrayNegativeIndexClamping() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+
+        // Negative indices should be clamped to 0
+        MolangExpression expr1 = compiler.compile("[100, 200, 300][-1]");
+        MolangExpression expr2 = compiler.compile("[100, 200, 300][-100]");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+
+        MolangValue result1 = runtime.resolve(expr1);
+        System.out.println(expr1 + "\n==RESULT==\n" + result1);
+        Assertions.assertEquals(MolangValue.of(100.0f), result1, "Index -1 should clamp to 0");
+
+        MolangValue result2 = runtime.resolve(expr2);
+        System.out.println(expr2 + "\n==RESULT==\n" + result2);
+        Assertions.assertEquals(MolangValue.of(100.0f), result2, "Index -100 should clamp to 0");
+    }
+
+    @Test
+    void testArrayOutOfBoundsWrapping() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+
+        // Array has length 3, so index 3 wraps to 0, index 4 wraps to 1, etc.
+        MolangExpression expr1 = compiler.compile("[10, 20, 30][3]");
+        MolangExpression expr2 = compiler.compile("[10, 20, 30][4]");
+        MolangExpression expr3 = compiler.compile("[10, 20, 30][5]");
+        MolangExpression expr4 = compiler.compile("[10, 20, 30][10]");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+
+        MolangValue result1 = runtime.resolve(expr1);
+        System.out.println(expr1 + "\n==RESULT==\n" + result1);
+        Assertions.assertEquals(MolangValue.of(10.0f), result1, "Index 3 should wrap to 0");
+
+        MolangValue result2 = runtime.resolve(expr2);
+        System.out.println(expr2 + "\n==RESULT==\n" + result2);
+        Assertions.assertEquals(MolangValue.of(20.0f), result2, "Index 4 should wrap to 1");
+
+        MolangValue result3 = runtime.resolve(expr3);
+        System.out.println(expr3 + "\n==RESULT==\n" + result3);
+        Assertions.assertEquals(MolangValue.of(30.0f), result3, "Index 5 should wrap to 2");
+
+        MolangValue result4 = runtime.resolve(expr4);
+        System.out.println(expr4 + "\n==RESULT==\n" + result4);
+        Assertions.assertEquals(MolangValue.of(20.0f), result4, "Index 10 should wrap to 1 (10 % 3 = 1)");
+    }
+
+    @Test
+    void testArrayFloatIndexCasting() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+
+        // Float indices should be cast to int (truncated)
+        MolangExpression expr1 = compiler.compile("[100, 200, 300][0.9]");
+        MolangExpression expr2 = compiler.compile("[100, 200, 300][1.1]");
+        MolangExpression expr3 = compiler.compile("[100, 200, 300][1.9]");
+        MolangExpression expr4 = compiler.compile("[100, 200, 300][2.5]");
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+
+        MolangValue result1 = runtime.resolve(expr1);
+        System.out.println(expr1 + "\n==RESULT==\n" + result1);
+        Assertions.assertEquals(MolangValue.of(100.0f), result1, "Index 0.9 should truncate to 0");
+
+        MolangValue result2 = runtime.resolve(expr2);
+        System.out.println(expr2 + "\n==RESULT==\n" + result2);
+        Assertions.assertEquals(MolangValue.of(200.0f), result2, "Index 1.1 should truncate to 1");
+
+        MolangValue result3 = runtime.resolve(expr3);
+        System.out.println(expr3 + "\n==RESULT==\n" + result3);
+        Assertions.assertEquals(MolangValue.of(200.0f), result3, "Index 1.9 should truncate to 1");
+
+        MolangValue result4 = runtime.resolve(expr4);
+        System.out.println(expr4 + "\n==RESULT==\n" + result4);
+        Assertions.assertEquals(MolangValue.of(300.0f), result4, "Index 2.5 should truncate to 2");
+    }
+
+    @Test
+    void testArrayVariableWithWrapping() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression expression = compiler.compile("""
+                v.numbers = [5, 10, 15, 20];
+                v.a = v.numbers[0];
+                v.b = v.numbers[4];
+                v.c = v.numbers[7];
+                v.d = v.numbers[-5];
+                return v.a + v.b + v.c + v.d;
+                """);
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+
+        Assertions.assertEquals(MolangValue.of(35.0f), result);
+    }
+
 }
