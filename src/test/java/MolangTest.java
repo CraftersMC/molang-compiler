@@ -392,6 +392,18 @@ public class MolangTest {
     }
 
     @Test
+    void testNullCoalescingLoop() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression loop = compiler.compile("""
+                loop(5, {v.test += v.test ?? 4});
+                return v.test;
+                """);
+
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        Assertions.assertEquals(MolangValue.of(64.0f), runtime.resolve(loop));
+    }
+
+    @Test
     void testIf() throws MolangException {
         MolangCompiler compiler = MolangCompiler.create();
         MolangExpression loop = compiler.compile("""

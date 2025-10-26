@@ -7,9 +7,7 @@ expressions to Java bytecode for optimal runtime performance.
 
 ## MoLang Compliance
 
-This compiler implements **all 26 official MoLang math functions** and supports the complete operator set from the
-Minecraft Bedrock Edition specification. See [MOLANG_COMPLIANCE.md](MOLANG_COMPLIANCE.md) for detailed compatibility
-information.
+See [MOLANG_COMPLIANCE.md](MOLANG_COMPLIANCE.md) for detailed compatibility information.
 
 For official MoLang documentation, see:
 

@@ -436,4 +436,12 @@ public class MolangParserTest {
 
         Assertions.assertEquals(3.0f, runtime.resolve(expr).asFloat());
     }
+
+    @Test
+    void testNullCoalescingLoop() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangExpression loop = compiler.compile("loop(5, {v.test ?? 4})");
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        Assertions.assertEquals(MolangValue.of(0.0f), runtime.resolve(loop));
+    }
 }

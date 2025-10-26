@@ -47,11 +47,13 @@ All official MoLang variable scopes are supported:
 - `continue` - Skip to next loop iteration
 - `return` - Explicitly return value
 - `if(condition) expression` - Conditional execution
+- `condition ? expression` - Conditional execution
 
 ### Limitations
 
 - Maximum loop iterations: Not enforced (official spec: 1024)
 - `break` and `continue` are validated at compile-time to be inside loops
+- For each operations (`for_each(<variable>, <array>, <expression>)`) are not supported
 
 ## Math Functions
 
@@ -109,10 +111,7 @@ These functions are **extensions** provided by this compiler and are **not** par
 
 ### Partial or Not Implemented
 
-- **Geometry, Texture, Material** - Not applicable for this use case
-- **Actor References** - Not applicable for this use case
-- **Structs** - Limited or no support
-- **Regex** - No support yet
+- **Structs** - Limited, although there is support for variables with multiple parts. Eg: `v.pos.x = 4`
 
 ### Known Differences
 
@@ -123,9 +122,8 @@ These functions are **extensions** provided by this compiler and are **not** par
 ### For Contributors
 
 1. **Reference official docs** when implementing new features
-2. **Mark extensions clearly** in code and documentation
-3. **Align test expectations** with official MoLang behavior where possible
-4. **Document deviations** from the spec in this file
+2. **Align test expectations** with official MoLang behavior where possible
+3. **Document deviations** from the spec in this file
 
 ## Version Information
 
