@@ -547,6 +547,207 @@ public class MolangTest {
     }
 
     @Test
+    void testComplexStringExpression2() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+
+        MolangValue wallPostBit = MolangValue.of("wall_post_bit");
+        MolangValue wallConnectionTypeNorth = MolangValue.of("wall_connection_type_north");
+        MolangValue wallConnectionTypeSouth = MolangValue.of("wall_connection_type_south");
+        MolangValue falseValue = MolangValue.of(false);
+        MolangValue tallValue = MolangValue.of("tall");
+        MolangExpression blockStateFunction = MolangExpression.function(1, ctx -> {
+            MolangValue param = ctx.get(0);
+            if (param.equalsValue(wallConnectionTypeNorth) || param.equalsValue(wallConnectionTypeSouth)) {
+                return tallValue;
+            }
+            if (param.equalsValue(wallPostBit)) {
+                return falseValue;
+            }
+            return MolangValue.NULL;
+        });
+
+        MolangExpression expression = compiler.compile("!q.block_state('wall_post_bit') && q.block_state('wall_connection_type_north') == 'tall' && q.block_state('wall_connection_type_south') == 'tall'");
+
+        MolangRuntime runtime = MolangRuntime.runtime()
+                .setQuery("block_state", blockStateFunction)
+                .create();
+        MolangValue result = runtime.resolve(expression);
+        System.out.println(expression + "\n==RESULT==\n" + result);
+        Assertions.assertEquals(MolangValue.of(true), result);
+    }
+
+    @Test
+    void testOperatorPrecedenceAndOr() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+
+        // Test: 1 == 1 && 2 == 2 should be true (1.0)
+        MolangExpression expr1 = compiler.compile("1 == 1 && 2 == 2");
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+        Assertions.assertEquals(1.0f, runtime.resolve(expr1).asFloat());
+
+        // Test: 1 == 2 && 2 == 2 should be false (0.0)
+        MolangExpression expr2 = compiler.compile("1 == 2 && 2 == 2");
+        Assertions.assertEquals(0.0f, runtime.resolve(expr2).asFloat());
+
+        // Test: 1 == 2 || 2 == 2 should be true (1.0)
+        MolangExpression expr3 = compiler.compile("1 == 2 || 2 == 2");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr3).asFloat());
+
+        // Test: 1 == 1 || 2 == 3 should be true (1.0)
+        MolangExpression expr4 = compiler.compile("1 == 1 || 2 == 3");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr4).asFloat());
+    }
+
+    @Test
+    void testOperatorPrecedenceComparison() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+
+        // Test: 5 > 3 && 2 < 4 should be true (1.0)
+        MolangExpression expr1 = compiler.compile("5 > 3 && 2 < 4");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr1).asFloat());
+
+        // Test: 5 >= 5 && 2 <= 2 should be true (1.0)
+        MolangExpression expr2 = compiler.compile("5 >= 5 && 2 <= 2");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr2).asFloat());
+
+        // Test: 1 != 2 && 3 != 3 should be false (0.0)
+        MolangExpression expr3 = compiler.compile("1 != 2 && 3 != 3");
+        Assertions.assertEquals(0.0f, runtime.resolve(expr3).asFloat());
+
+        // Test: 1 != 2 || 3 != 3 should be true (1.0)
+        MolangExpression expr4 = compiler.compile("1 != 2 || 3 != 3");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr4).asFloat());
+    }
+
+    @Test
+    void testOperatorPrecedenceNegation() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+
+        // Test: !0 && 1 == 1 should be true (1.0) (! has higher precedence than &&)
+        MolangExpression expr1 = compiler.compile("!0 && 1 == 1");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr1).asFloat());
+
+        // Test: !1 || 2 == 2 should be true (1.0)
+        MolangExpression expr2 = compiler.compile("!1 || 2 == 2");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr2).asFloat());
+
+        // Test: !0 && !0 should be true (1.0)
+        MolangExpression expr3 = compiler.compile("!0 && !0");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr3).asFloat());
+
+        // Test: !(1 == 2) should be true (1.0)
+        MolangExpression expr4 = compiler.compile("!(1 == 2)");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr4).asFloat());
+    }
+
+    @Test
+    void testOperatorPrecedenceArithmetic() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+
+        // Test: 2 + 3 == 5 should be true (1.0) (arithmetic before comparison)
+        MolangExpression expr1 = compiler.compile("2 + 3 == 5");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr1).asFloat());
+
+        // Test: 2 * 3 == 6 && 4 + 1 == 5 should be true (1.0)
+        MolangExpression expr2 = compiler.compile("2 * 3 == 6 && 4 + 1 == 5");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr2).asFloat());
+
+        // Test: 10 / 2 > 4 should be true (1.0)
+        MolangExpression expr3 = compiler.compile("10 / 2 > 4");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr3).asFloat());
+
+        // Test: 3 + 2 * 2 == 7 should be true (1.0) (multiplication before addition)
+        MolangExpression expr4 = compiler.compile("3 + 2 * 2 == 7");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr4).asFloat());
+    }
+
+    @Test
+    void testOperatorPrecedenceMixed() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+
+        // Test: !0 && 2 + 2 == 4 || 5 > 10 should be true (1.0)
+        MolangExpression expr1 = compiler.compile("!0 && 2 + 2 == 4 || 5 > 10");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr1).asFloat());
+
+        // Test: 1 == 1 && 2 == 2 && 3 == 3 should be true (1.0)
+        MolangExpression expr2 = compiler.compile("1 == 1 && 2 == 2 && 3 == 3");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr2).asFloat());
+
+        // Test: 1 == 1 || 2 == 2 || 3 == 4 should be true (1.0)
+        MolangExpression expr3 = compiler.compile("1 == 1 || 2 == 2 || 3 == 4");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr3).asFloat());
+
+        // Test: 1 + 2 == 3 && 4 - 1 == 3 && 2 * 3 == 6 should be true (1.0)
+        MolangExpression expr4 = compiler.compile("1 + 2 == 3 && 4 - 1 == 3 && 2 * 3 == 6");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr4).asFloat());
+    }
+
+    @Test
+    void testOperatorPrecedenceChaining() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+
+        // Test: 1 < 2 && 2 < 3 && 3 < 4 should be true (1.0)
+        MolangExpression expr1 = compiler.compile("1 < 2 && 2 < 3 && 3 < 4");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr1).asFloat());
+
+        // Test: 1 == 1 && 2 != 3 && 4 > 2 should be true (1.0)
+        MolangExpression expr2 = compiler.compile("1 == 1 && 2 != 3 && 4 > 2");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr2).asFloat());
+
+        // Test: 5 >= 5 || 3 <= 2 || 1 == 2 should be true (1.0)
+        MolangExpression expr3 = compiler.compile("5 >= 5 || 3 <= 2 || 1 == 2");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr3).asFloat());
+    }
+
+    @Test
+    void testOperatorPrecedenceWithVariables() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+
+        // Test with variables: v.a == 5 && v.b == 10 should be true (1.0)
+        MolangExpression expr1 = compiler.compile("v.a == 5 && v.b == 10");
+        MolangRuntime runtime1 = MolangRuntime.runtime()
+                .setVariable("a", 5.0f)
+                .setVariable("b", 10.0f)
+                .create();
+        Assertions.assertEquals(1.0f, runtime1.resolve(expr1).asFloat());
+
+        // Test: v.a + v.b == 15 should be true (1.0)
+        MolangExpression expr2 = compiler.compile("v.a + v.b == 15");
+        Assertions.assertEquals(1.0f, runtime1.resolve(expr2).asFloat());
+
+        // Test: !v.flag && v.count > 0 should be true (1.0)
+        MolangExpression expr3 = compiler.compile("!v.flag && v.count > 0");
+        MolangRuntime runtime2 = MolangRuntime.runtime()
+                .setVariable("flag", 0.0f)
+                .setVariable("count", 5.0f)
+                .create();
+        Assertions.assertEquals(1.0f, runtime2.resolve(expr3).asFloat());
+    }
+
+    @Test
+    void testOperatorPrecedenceParentheses() throws MolangException {
+        MolangCompiler compiler = MolangCompiler.create();
+        MolangRuntime runtime = MolangRuntime.runtime().create();
+
+        // Test: (1 == 1) && (2 == 2) should be true (1.0)
+        MolangExpression expr1 = compiler.compile("(1 == 1) && (2 == 2)");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr1).asFloat());
+
+        // Test: (2 + 3) * 2 == 10 should be true (1.0)
+        MolangExpression expr2 = compiler.compile("(2 + 3) * 2 == 10");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr2).asFloat());
+
+        // Test: !(1 == 2) && (3 == 3) should be true (1.0)
+        MolangExpression expr3 = compiler.compile("!(1 == 2) && (3 == 3)");
+        Assertions.assertEquals(1.0f, runtime.resolve(expr3).asFloat());
+    }
+
+    @Test
     void testArrayLiteral() throws MolangException {
         MolangCompiler compiler = MolangCompiler.create();
         MolangExpression expression = compiler.compile("[1, 2, 3]");
