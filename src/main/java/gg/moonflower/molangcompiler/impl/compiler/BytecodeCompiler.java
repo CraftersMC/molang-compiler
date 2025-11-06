@@ -379,7 +379,7 @@ public class BytecodeCompiler extends ClassLoader {
         method.visitMethodInsn(Opcodes.INVOKEVIRTUAL,
                 "gg/moonflower/molangcompiler/api/MolangValue",
                 methodName,
-                "(Lgg/moonflower/molangcompiler/api/MolangValue;)Lgg/moonflower/molangcompiler/api/MolangValue;",
+                "()Lgg/moonflower/molangcompiler/api/MolangValue;",
                 false
         );
     }
