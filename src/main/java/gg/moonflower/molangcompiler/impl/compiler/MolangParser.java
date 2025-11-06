@@ -375,13 +375,13 @@ public final class MolangParser {
                         case "&" -> {
                             expect(reader, MolangLexer.TokenType.SPECIAL, "&");
                             reader.skip(2);
-                            result = new BinaryOperationNode(BinaryOperation.AND, result, parseNode(reader));
+                            result = new BinaryOperationNode(BinaryOperation.AND, result, parseComparison(reader));
                         }
                         // obj.name||...
                         case "|" -> {
                             expect(reader, MolangLexer.TokenType.SPECIAL, "|");
                             reader.skip(2);
-                            result = new BinaryOperationNode(BinaryOperation.OR, result, parseNode(reader));
+                            result = new BinaryOperationNode(BinaryOperation.OR, result, parseComparison(reader));
                         }
                         // obj.name??... or obj.name?b...
                         case "?" -> {
@@ -689,6 +689,116 @@ public final class MolangParser {
             }
         }
         return left;
+    }
+
+    /**
+     * Parses a comparison expression (including ==, !=, <, >, <=, >=) but stops before && or ||.
+     * This is used as the right operand of && and || to implement correct operator precedence.
+     *
+     * @param reader The token reader positioned at the start of the comparison
+     * @return The parsed comparison node
+     * @throws MolangSyntaxException if parsing fails
+     */
+    private static Node parseComparison(TokenReader reader) throws MolangSyntaxException {
+        Node result = parseNode(reader);
+
+        // Handle arithmetic operators (+, -, *, /)
+        if (reader.canRead()) {
+            MolangLexer.Token token = reader.peek();
+            if (token.type() == MolangLexer.TokenType.BINARY_OPERATION) {
+                result = parseBinaryExpression(result, reader);
+            }
+        }
+
+        // Now handle comparison operators
+        while (reader.canRead()) {
+            MolangLexer.Token token = reader.peek();
+            if (token.type() == MolangLexer.TokenType.SEMICOLON || token.type().isOutOfScope()) {
+                return result;
+            }
+
+            if (result instanceof OptionalValueNode setNode) {
+                result = setNode.withReturnValue();
+            }
+
+            if (token.type() == MolangLexer.TokenType.EQUAL) {
+                reader.skip();
+                expect(reader, MolangLexer.TokenType.EQUAL);
+                reader.skip();
+                Node right = parseNode(reader);
+                if (reader.canRead() && reader.peek().type() == MolangLexer.TokenType.BINARY_OPERATION) {
+                    right = parseBinaryExpression(right, reader);
+                }
+                result = new BinaryOperationNode(BinaryOperation.EQUALS, result, right);
+            } else if (token.type() == MolangLexer.TokenType.SPECIAL) {
+                switch (token.value()) {
+                    case "!" -> {
+                        if (reader.canRead(2) && reader.peekAfter(1).type() == MolangLexer.TokenType.EQUAL) {
+                            reader.skip(2);
+                            Node right = parseNode(reader);
+                            if (reader.canRead() && reader.peek().type() == MolangLexer.TokenType.BINARY_OPERATION) {
+                                right = parseBinaryExpression(right, reader);
+                            }
+                            result = new BinaryOperationNode(BinaryOperation.NOT_EQUALS, result, right);
+                        } else {
+                            return result;
+                        }
+                    }
+                    case ">" -> {
+                        reader.skip();
+                        if (reader.canRead() && reader.peek().type() == MolangLexer.TokenType.EQUAL) {
+                            reader.skip();
+                            Node right = parseNode(reader);
+                            if (reader.canRead() && reader.peek().type() == MolangLexer.TokenType.BINARY_OPERATION) {
+                                right = parseBinaryExpression(right, reader);
+                            }
+                            result = new BinaryOperationNode(BinaryOperation.GREATER_EQUALS, result, right);
+                        } else {
+                            Node right = parseNode(reader);
+                            if (reader.canRead() && reader.peek().type() == MolangLexer.TokenType.BINARY_OPERATION) {
+                                right = parseBinaryExpression(right, reader);
+                            }
+                            result = new BinaryOperationNode(BinaryOperation.GREATER, result, right);
+                        }
+                    }
+                    case "<" -> {
+                        reader.skip();
+                        if (reader.canRead() && reader.peek().type() == MolangLexer.TokenType.EQUAL) {
+                            reader.skip();
+                            Node right = parseNode(reader);
+                            if (reader.canRead() && reader.peek().type() == MolangLexer.TokenType.BINARY_OPERATION) {
+                                right = parseBinaryExpression(right, reader);
+                            }
+                            result = new BinaryOperationNode(BinaryOperation.LESS_EQUALS, result, right);
+                        } else {
+                            Node right = parseNode(reader);
+                            if (reader.canRead() && reader.peek().type() == MolangLexer.TokenType.BINARY_OPERATION) {
+                                right = parseBinaryExpression(right, reader);
+                            }
+                            result = new BinaryOperationNode(BinaryOperation.LESS, result, right);
+                        }
+                    }
+                    case "&", "|", "?" -> {
+                        // Stop here - these have lower precedence
+                        return result;
+                    }
+                    default -> {
+                        return result;
+                    }
+                }
+            } else if (token.type() == MolangLexer.TokenType.LEFT_BRACKET) {
+                // Array access
+                reader.skip();
+                Node index = parseExpression(reader);
+                expect(reader, MolangLexer.TokenType.RIGHT_BRACKET);
+                reader.skip();
+                result = new ArrayAccessNode(result, index);
+            } else {
+                return result;
+            }
+        }
+
+        return result;
     }
 
     /**
