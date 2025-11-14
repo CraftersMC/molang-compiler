@@ -32,8 +32,6 @@ import java.util.regex.Pattern;
 @ApiStatus.Internal
 public final class MolangLexer {
 
-    private static final Pattern WHITESPACE_PATTERN = Pattern.compile("[\n\t]");
-
     /**
      * Tokenizes the input string into an array of tokens.
      * <p>
@@ -50,25 +48,23 @@ public final class MolangLexer {
      * @throws MolangSyntaxException if an unknown token is encountered
      */
     public static Token[] createTokens(String input) throws MolangSyntaxException {
-        StringReader reader = new StringReader(WHITESPACE_PATTERN.matcher(input).replaceAll(""));
+        StringReader reader = new StringReader(input);
         List<Token> tokens = new ArrayList<>();
 
         while (reader.canRead()) {
             reader.skipWhitespace();
             Token token = getToken(reader);
-            if (token != null) {
-                if (!tokens.isEmpty()) {
-                    Token lastToken = tokens.get(tokens.size() - 1);
-                    // Insert semicolon after scopes
-                    if (lastToken.type == TokenType.RIGHT_BRACE && token.type != TokenType.SEMICOLON) {
-                        tokens.add(new Token(TokenType.SEMICOLON, ";"));
-                    }
-                }
-                tokens.add(token);
+            if (token == null) {
                 continue;
             }
-
-            throw new MolangSyntaxException("Unknown Token", reader.getString(), reader.getCursor());
+            if (!tokens.isEmpty()) {
+                Token lastToken = tokens.get(tokens.size() - 1);
+                // Insert semicolon after scopes
+                if (lastToken.type == TokenType.RIGHT_BRACE && token.type != TokenType.SEMICOLON) {
+                    tokens.add(new Token(TokenType.SEMICOLON, ";"));
+                }
+            }
+            tokens.add(token);
         }
 
         return tokens.toArray(Token[]::new);
@@ -83,8 +79,11 @@ public final class MolangLexer {
      * @param reader The string reader positioned at the token to match
      * @return The matched token, or null if no pattern matches
      */
-    private static Token getToken(StringReader reader) {
+    private static Token getToken(StringReader reader) throws MolangSyntaxException {
         String word = reader.getString().substring(reader.getCursor());
+        if (word.isBlank()) {
+            return null;
+        }
         for (TokenType type : TokenType.values()) {
             Matcher matcher = type.pattern.matcher(word);
             if (matcher.find() && matcher.start() == 0) {
@@ -92,8 +91,7 @@ public final class MolangLexer {
                 return new Token(type, word.substring(0, matcher.end()));
             }
         }
-
-        return null;
+        throw new MolangSyntaxException("Unknown Token", reader.getString(), reader.getCursor());
     }
 
     /**
