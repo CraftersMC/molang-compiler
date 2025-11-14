@@ -4,6 +4,7 @@ import gg.moonflower.molangcompiler.impl.MolangUtil;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Objects;
 
 /**
@@ -33,6 +34,36 @@ public final class MolangValue {
         this.stringValue = stringValue;
         this.boolValue = boolValue;
         this.arrayValue = arrayValue;
+    }
+
+    public static MolangValue ofObject(Object value) {
+        if (value instanceof Number f) {
+            return of(f.floatValue());
+        } else if (value instanceof String s) {
+            return of(s);
+        } else if (value instanceof MolangValue[] array) {
+            return of(array);
+        } else if (value instanceof Collection<?> collection) {
+            MolangValue[] newArray = new MolangValue[collection.size()];
+            int i = 0;
+            for (Object o : collection) {
+                newArray[i] = ofObject(o);
+                i++;
+            }
+            return of(newArray);
+        } else if (value instanceof Object[] array) {
+            MolangValue[] newArray = new MolangValue[array.length];
+            for (int i = 0; i < array.length; i++) {
+                newArray[i] = ofObject(array[i]);
+            }
+            return of(newArray);
+        } else if (value instanceof Boolean bool) {
+            return of(bool);
+        } else if (value instanceof MolangValue v) {
+            return v;
+        } else {
+            return of(value.toString());
+        }
     }
 
     /**
