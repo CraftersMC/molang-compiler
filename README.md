@@ -99,15 +99,22 @@ public class Example {
     private final MolangExpression speed;
     private final MolangExpression time;
 
-    // MolangEnvironment#resolve(MolangExpression) allows the caller to handle errors created while resolving
+  public Example(MolangExpression speed, MolangExpression time) {
+    this.speed = speed;
+    this.time = time;
+  }
+
+  // MolangEnvironment#resolve(MolangExpression) allows the caller to handle errors created while resolving
     // The most common reason for an error is a variable being used that isn't defined in the environment
+  // Returns a MolangValue which can be converted to float with asFloat()
     public float getSpeed(MolangEnvironment environment) throws MolangRuntimeException {
-        return environment.resolve(this.speed);
+      return environment.resolve(this.speed).asFloat();
     }
 
     // Alternatively MolangEnvironment#safeResolve(MolangExpression) can be used to print the stack trace and return 0 on errors
+    // Returns a MolangValue which can be converted to float with asFloat()
     public float getTime(MolangEnvironment environment) {
-        return environment.safeResolve(this.time);
+      return environment.safeResolve(this.time).asFloat();
     }
 
     public static @Nullable Example deserialize(String speedInput, String timeInput) {
@@ -138,12 +145,12 @@ Using variables:
 ```java
 public class Foo {
 
-    public void run() {
+  public void run() throws MolangException {
         // A runtime is the base implementation of an environment.
         // The provided builder can add variables, queries, globals, and extra libraries
         MolangEnvironment environment = MolangRuntime.runtime()
-                .setQuery("foo", 4)
-                .setQuery("bar", 12)
+                .setQuery("foo", 4.0f)
+                .setQuery("bar", 12.0f)
                 .create();
 
         Example example = Example.deserialize("(q.foo - q.bar) > 0", "q.foo * q.bar");
@@ -166,6 +173,12 @@ public class BarLibrary extends MolangLibrary {
         // Add all expressions that should be registered under "libname"
         // For example, this becomes "libname.secret" in MoLang code
         consumer.accept("secret", MolangExpression.of(42));
+
+      // You can also add functions that execute Java code
+      consumer.accept("greet", MolangExpression.function(1, (runtime, params) -> {
+        String name = params[0].asString();
+        return MolangValue.of("Hello, " + name + "!");
+      }));
     }
 
     // This name is used for printing and identification.
@@ -175,17 +188,27 @@ public class BarLibrary extends MolangLibrary {
         return "libname";
     }
 
-    public static void addLibraries(MolangEnvironment environment) {
+  public static MolangEnvironment createEnvironmentWithLibrary() {
+    // Use the builder pattern to create an environment with the custom library
+    return MolangRuntime.runtime()
+            .loadLibrary("libname", new BarLibrary())
+            .setQuery("loadedBar", 1.0f)
+            .create();
+  }
+
+  public static void addToExistingEnvironment(MolangEnvironment environment) {
         // Environments can be immutable and will throw an exception if they are tried to be modified
         if (!environment.canEdit()) {
             throw new UnsupportedOperationException("Environment is immutable");
         }
 
-        MolangEnvironmentBuilder<? extends MolangEnvironment> builder = environment.edit();
-        builder.setQuery("loadedBar", 1);
+    // Edit the environment and add the library
+    environment.edit()
+            .loadLibrary("libname", new BarLibrary())
+            .setQuery("loadedBar", 1.0f)
+            .create(); // This returns the same environment instance
 
-        // This will allow MoLang expressions to resolve "libname.secret" now
-        environment.loadLibrary("libname", new BarLibrary());
+    // Now MoLang expressions can resolve "libname.secret" and "libname.greet()"
     }
 }
 ```
