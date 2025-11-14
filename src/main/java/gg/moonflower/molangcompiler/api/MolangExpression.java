@@ -23,7 +23,7 @@ public interface MolangExpression {
     MolangExpression NULL = of(MolangValue.ofNull());
 
     /**
-     * Resolves the value of this expression.
+     * Resolves the value of this expression. Prefer calling MolangEnvironment#resolve instead.
      *
      * @param environment The environment to execute in
      * @return The resulting value
