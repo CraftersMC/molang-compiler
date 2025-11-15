@@ -6,6 +6,7 @@ import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.bridge.MolangVariable;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.api.exception.MolangSyntaxException;
+import gg.moonflower.molangcompiler.impl.CompilerFlags;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.Test;
 
@@ -170,7 +171,7 @@ public class MolangTest {
 
     @Test
     void testCondition() throws MolangException {
-        MolangCompiler compiler = MolangCompiler.create(0);
+        MolangCompiler compiler = MolangCompiler.create(CompilerFlags.NONE);
         MolangExpression expression = compiler.compile("1 > 2 ? 10 : 20");
 
         MolangRuntime runtime = MolangRuntime.runtime().create();
@@ -335,12 +336,12 @@ public class MolangTest {
 
         }
         List<Condition> conditions = new ArrayList<>();
-        conditions.add(new Condition("==", (a, b) -> a.internalEquals(b)));
-        conditions.add(new Condition("!=", (a, b) -> a.internalNotEquals(b)));
-        conditions.add(new Condition(">", (a, b) -> a.internalGreater(b)));
-        conditions.add(new Condition(">=", (a, b) -> a.internalGreaterEquals(b)));
-        conditions.add(new Condition("<", (a, b) -> a.internalLess(b)));
-        conditions.add(new Condition("<=", (a, b) -> a.internalLessEquals(b)));
+        conditions.add(new Condition("==", MolangValue::internalEquals));
+        conditions.add(new Condition("!=", MolangValue::internalNotEquals));
+        conditions.add(new Condition(">", MolangValue::internalGreater));
+        conditions.add(new Condition(">=", MolangValue::internalGreaterEquals));
+        conditions.add(new Condition("<", MolangValue::internalLess));
+        conditions.add(new Condition("<=", MolangValue::internalLessEquals));
 
         MolangCompiler compiler = MolangCompiler.create();
 

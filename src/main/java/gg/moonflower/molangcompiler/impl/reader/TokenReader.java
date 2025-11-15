@@ -1,5 +1,6 @@
-package gg.moonflower.molangcompiler.impl.compiler;
+package gg.moonflower.molangcompiler.impl.reader;
 
+import gg.moonflower.molangcompiler.impl.compiler.MolangLexer;
 import org.jetbrains.annotations.ApiStatus;
 
 /**

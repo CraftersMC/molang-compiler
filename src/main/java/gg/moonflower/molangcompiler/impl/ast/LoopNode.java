@@ -2,7 +2,7 @@ package gg.moonflower.molangcompiler.impl.ast;
 
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
-import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
@@ -35,7 +35,7 @@ public record LoopNode(Node iterations, Node body) implements Node {
     }
 
     @Override
-    public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+    public void writeBytecode(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
         boolean bodyHasValue = this.body.hasValue();
 
         if (this.iterations.isConstant()) {
@@ -45,7 +45,7 @@ public record LoopNode(Node iterations, Node body) implements Node {
                 Label end = new Label();
                 for (int i = 0; i < iterations; i++) {
                     Label next = new Label();
-                    this.body.writeBytecode(method, environment, end, next);
+                    this.body.writeBytecode(method, compiler, environment, end, next);
                     if (bodyHasValue) { // Must return void
                         method.visitInsn(Opcodes.POP);
                     }
@@ -60,13 +60,13 @@ public record LoopNode(Node iterations, Node body) implements Node {
         Label end = new Label();
         Label begin = new Label();
         // iterations
-        this.iterations.writeBytecodeAsFloat(method, environment, breakLabel, continueLabel);
+        this.iterations.writeBytecodeAsFloat(method, compiler, environment, breakLabel, continueLabel);
         method.visitInsn(Opcodes.F2I);
 
-        BytecodeCompiler.writeIntConst(method, 0); // int i = 0;
+        compiler.writeIntConst(method, 0); // int i = 0;
         method.visitLabel(begin);
 
-        this.body.writeBytecode(method, environment, end, next);
+        this.body.writeBytecode(method, compiler, environment, end, next);
         if (bodyHasValue) { // Must return void
             method.visitInsn(Opcodes.POP);
         }

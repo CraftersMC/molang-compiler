@@ -3,7 +3,7 @@ package gg.moonflower.molangcompiler.impl.ast;
 import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
-import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
@@ -45,7 +45,7 @@ public record ArrayLiteralNode(Node[] elements) implements Node {
     }
 
     @Override
-    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+    public MolangValue evaluate(BytecodeEnvironment environment) throws MolangException {
         MolangValue[] values = new MolangValue[elements.length];
         for (int i = 0; i < elements.length; i++) {
             values[i] = elements[i].evaluate(environment);
@@ -54,9 +54,9 @@ public record ArrayLiteralNode(Node[] elements) implements Node {
     }
 
     @Override
-    public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+    public void writeBytecode(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
         // Push array size onto stack
-        BytecodeCompiler.writeIntConst(method, elements.length);
+        compiler.writeIntConst(method, elements.length);
 
         // Create new MolangValue array
         method.visitTypeInsn(Opcodes.ANEWARRAY, "gg/moonflower/molangcompiler/api/MolangValue");
@@ -67,10 +67,10 @@ public record ArrayLiteralNode(Node[] elements) implements Node {
             method.visitInsn(Opcodes.DUP);
 
             // Push index
-            BytecodeCompiler.writeIntConst(method, i);
+            compiler.writeIntConst(method, i);
 
             // Evaluate element
-            elements[i].writeBytecode(method, environment, breakLabel, continueLabel);
+            elements[i].writeBytecode(method, compiler, environment, breakLabel, continueLabel);
 
             // Store in array: array[i] = value
             method.visitInsn(Opcodes.AASTORE);

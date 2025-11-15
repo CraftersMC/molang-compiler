@@ -1,5 +1,8 @@
 package gg.moonflower.molangcompiler.api;
 
+import gg.moonflower.molangcompiler.impl.CompilerFlag;
+import gg.moonflower.molangcompiler.impl.CompilerFlags;
+
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -11,15 +14,15 @@ import java.util.concurrent.ConcurrentHashMap;
  */
 public final class GlobalMolangCompiler {
 
-    private static final Map<Integer, MolangCompiler> GLOBAL_COMPILERS = new ConcurrentHashMap<>();
+    private static final Map<CompilerFlags, MolangCompiler> GLOBAL_COMPILERS = new ConcurrentHashMap<>();
 
     /**
-     * Retrieves a compiler with the {@linkplain MolangCompiler#DEFAULT_FLAGS default flags}.
+     * Retrieves a compiler with the {@linkplain CompilerFlags#DEFAULT default flags}.
      *
      * @return The compiler instance
      */
     public static MolangCompiler get() {
-        return get(MolangCompiler.DEFAULT_FLAGS);
+        return get(CompilerFlags.DEFAULT);
     }
 
     /**
@@ -27,11 +30,9 @@ public final class GlobalMolangCompiler {
      *
      * @param flags The compiler flags to use
      * @return The compiler instance
-     * @see MolangCompiler#OPTIMIZE_FLAG
-     * @see MolangCompiler#WRITE_CLASSES_FLAG
-     * @see MolangCompiler#DEFAULT_FLAGS
+     * @see CompilerFlag
      */
-    public static MolangCompiler get(int flags) {
+    public static MolangCompiler get(CompilerFlags flags) {
         return GLOBAL_COMPILERS.computeIfAbsent(flags, MolangCompiler::create);
     }
 

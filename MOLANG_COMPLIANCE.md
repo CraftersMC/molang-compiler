@@ -125,8 +125,38 @@ These functions are **extensions** provided by this compiler and are **not** par
 2. **Align test expectations** with official MoLang behavior where possible
 3. **Document deviations** from the spec in this file
 
+## Compiler Versioning
+
+This compiler supports versioned compilation. This allows the compiler to maintain backward
+compatibility with different MoLang specifications while adding new features.
+
+### Current Versions
+
+| Version | Description                                             | Status      |
+|---------|---------------------------------------------------------|-------------|
+| 12      | Latest implementation, supports all documented features | Implemented |
+
+### Version-Specific Behavior
+
+Different compiler versions may have subtle differences in:
+
+- **Parsing rules** - How expressions are tokenized and parsed
+- **Operator precedence** - Order of operations for complex expressions
+- **Available functions** - Which built-in functions are available
+- **Error handling** - How syntax errors are reported
+
+When compiling expressions, you can specify a target version:
+
+```java
+MolangCompiler compiler = GlobalMolangCompiler.get();
+MolangExpression expr = compiler.compile("q.foo * 2", MolangVersion.get(12));
+```
+
+If no version is specified, `MolangVersion.LATEST` (currently v12) is used.
+
 ## Version Information
 
 - **Compiler Version:** 4.0.0
+- **Default MoLang Version:** 12
 - **MoLang Spec Reference:** Minecraft Bedrock Edition (latest stable)
-- **Last Updated:** 2025-10-26
+- **Last Updated:** 2025-11-15

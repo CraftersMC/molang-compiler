@@ -4,7 +4,7 @@ import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.impl.MolangUtil;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
-import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
@@ -38,27 +38,27 @@ public record ConstNode(MolangValue value) implements Node {
     }
 
     @Override
-    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+    public MolangValue evaluate(BytecodeEnvironment environment) throws MolangException {
         return this.value;
     }
 
     @Override
-    public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        BytecodeCompiler.writeConst(method, this.value);
+    public void writeBytecode(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        compiler.writeConst(method, this.value);
     }
 
     @Override
-    public void writeBytecodeAsFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        BytecodeCompiler.writeFloatConst(method, this.value.asFloat());
+    public void writeBytecodeAsFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        compiler.writeFloatConst(method, this.value.asFloat());
     }
 
     @Override
-    public void writeBytecodeAsTruncatedFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        BytecodeCompiler.writeFloatConst(method, (int) this.value.asFloat());
+    public void writeBytecodeAsTruncatedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        compiler.writeFloatConst(method, (int) this.value.asFloat());
     }
 
     @Override
-    public void writeBytecodeAsRoundedFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        BytecodeCompiler.writeFloatConst(method, Math.round(this.value.asFloat()));
+    public void writeBytecodeAsRoundedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        compiler.writeFloatConst(method, Math.round(this.value.asFloat()));
     }
 }

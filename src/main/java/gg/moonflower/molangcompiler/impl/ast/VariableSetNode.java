@@ -1,7 +1,8 @@
 package gg.moonflower.molangcompiler.impl.ast;
 
 import gg.moonflower.molangcompiler.api.exception.MolangException;
-import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
@@ -43,13 +44,13 @@ public record VariableSetNode(String object,
     }
 
     @Override
-    public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+    public void writeBytecode(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
         if (!"temp".equals(this.object)) {
             // Insert at earliest opportunity if required
             environment.getObjectIndex(method, this.object);
         }
 
-        this.value.writeBytecode(method, environment, breakLabel, continueLabel);
+        this.value.writeBytecode(method, compiler, environment, breakLabel, continueLabel);
         if (this.returnValue) {
             method.visitInsn(Opcodes.DUP);
         }

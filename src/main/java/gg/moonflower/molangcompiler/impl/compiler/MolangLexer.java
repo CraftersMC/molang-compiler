@@ -1,6 +1,7 @@
 package gg.moonflower.molangcompiler.impl.compiler;
 
 import gg.moonflower.molangcompiler.api.exception.MolangSyntaxException;
+import gg.moonflower.molangcompiler.impl.reader.StringReader;
 import org.jetbrains.annotations.ApiStatus;
 
 import java.util.ArrayList;

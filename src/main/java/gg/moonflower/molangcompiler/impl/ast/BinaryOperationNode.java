@@ -3,7 +3,7 @@ package gg.moonflower.molangcompiler.impl.ast;
 import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
-import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
@@ -35,7 +35,7 @@ public record BinaryOperationNode(BinaryOperation operator, Node left, Node righ
         return true;
     }
 
-    private float evaluateFloat(MolangBytecodeEnvironment environment) throws MolangException {
+    private float evaluateFloat(BytecodeEnvironment environment) throws MolangException {
         MolangValue leftValue = this.left.evaluate(environment);
         MolangValue rightValue = this.right.evaluate(environment);
 
@@ -73,27 +73,27 @@ public record BinaryOperationNode(BinaryOperation operator, Node left, Node righ
     }
 
     @Override
-    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+    public MolangValue evaluate(BytecodeEnvironment environment) throws MolangException {
         return MolangValue.of(this.evaluateFloat(environment));
     }
 
     @Override
-    public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        if (environment.optimize() && this.isConstant()) {
-            BytecodeCompiler.writeConst(method, this.evaluate(environment));
+    public void writeBytecode(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        if (compiler.isOptimizationEnabled() && this.isConstant()) {
+            compiler.writeConst(method, this.evaluate(environment));
             return;
         }
-        BytecodeCompiler.writeBinaryOperation(method, environment, breakLabel, continueLabel,
+        compiler.writeBinaryOperation(method, environment, breakLabel, continueLabel,
                 left, right, operator);
     }
 
     @Override
-    public void writeBytecodeAsFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        if (environment.optimize() && this.isConstant()) {
-            BytecodeCompiler.writeFloatConst(method, this.evaluateFloat(environment));
+    public void writeBytecodeAsFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        if (compiler.isOptimizationEnabled() && this.isConstant()) {
+            compiler.writeFloatConst(method, this.evaluateFloat(environment));
             return;
         }
-        BytecodeCompiler.writeBinaryOperationAsFloat(method, environment, breakLabel, continueLabel,
+        compiler.writeBinaryOperationAsFloat(method, environment, breakLabel, continueLabel,
                 left, right, operator);
     }
 }

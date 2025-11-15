@@ -2,7 +2,7 @@ package gg.moonflower.molangcompiler.impl.ast;
 
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
-import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
@@ -31,11 +31,11 @@ public record ThisNode() implements Node {
     }
 
     @Override
-    public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        Integer index = environment.variables().get("this");
+    public void writeBytecode(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        Integer index = environment.getVariableIndex("this");
         if (index == null) {
             index = environment.allocateVariable("this");
-            method.visitVarInsn(Opcodes.ALOAD, BytecodeCompiler.RUNTIME_INDEX);
+            method.visitVarInsn(Opcodes.ALOAD, environment.getRuntimeIndex());
             method.visitMethodInsn(
                     Opcodes.INVOKEINTERFACE,
                     "gg/moonflower/molangcompiler/api/MolangEnvironment",

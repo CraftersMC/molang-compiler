@@ -2,7 +2,8 @@ package gg.moonflower.molangcompiler.impl.ast;
 
 import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
-import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
@@ -33,14 +34,14 @@ public record ScopeNode(Node node) implements Node {
     }
 
     @Override
-    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+    public MolangValue evaluate(BytecodeEnvironment environment) throws MolangException {
         return this.node.evaluate(environment);
     }
 
     @Override
-    public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        MolangBytecodeEnvironment scopeEnvironment = new MolangBytecodeEnvironment(environment);
-        this.node.writeBytecode(method, scopeEnvironment, breakLabel, continueLabel);
+    public void writeBytecode(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        BytecodeEnvironment scopeEnvironment = environment.copy();
+        this.node.writeBytecode(method, compiler, scopeEnvironment, breakLabel, continueLabel);
         scopeEnvironment.writeModifiedVariables(method);
     }
 }

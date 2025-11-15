@@ -2,7 +2,7 @@ package gg.moonflower.molangcompiler.impl.ast;
 
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
-import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
@@ -39,7 +39,7 @@ public record FunctionNode(String object, String function, Node... arguments) im
     }
 
     @Override
-    public void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+    public void writeBytecode(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
         int objectIndex = environment.getObjectIndex(method, this.object);
 
         // Function
@@ -58,16 +58,16 @@ public record FunctionNode(String object, String function, Node... arguments) im
 
         // Parameters
         for (Node node : this.arguments) {
-            boolean full = !environment.optimize() || !node.isConstant();
+            boolean full = !compiler.isOptimizationEnabled() || !node.isConstant();
             if (full) {
-                node.writeBytecode(method, environment, breakLabel, continueLabel);
+                node.writeBytecode(method, compiler, environment, breakLabel, continueLabel);
             }
 
-            method.visitVarInsn(Opcodes.ALOAD, BytecodeCompiler.RUNTIME_INDEX);
+            method.visitVarInsn(Opcodes.ALOAD, environment.getRuntimeIndex());
             if (full) {
                 method.visitInsn(Opcodes.SWAP);
             } else {
-                BytecodeCompiler.writeConst(method, node.evaluate(environment));
+                compiler.writeConst(method, node.evaluate(environment));
             }
             method.visitMethodInsn(
                     Opcodes.INVOKEINTERFACE,
@@ -80,7 +80,7 @@ public record FunctionNode(String object, String function, Node... arguments) im
 
         // Resolve Function
         method.visitVarInsn(Opcodes.ALOAD, expressionIndex);
-        method.visitVarInsn(Opcodes.ALOAD, BytecodeCompiler.RUNTIME_INDEX);
+        method.visitVarInsn(Opcodes.ALOAD, environment.getRuntimeIndex());
         method.visitMethodInsn(
                 Opcodes.INVOKEINTERFACE,
                 "gg/moonflower/molangcompiler/api/MolangExpression",
@@ -90,7 +90,7 @@ public record FunctionNode(String object, String function, Node... arguments) im
         );
 
         // Clear parameters
-        method.visitVarInsn(Opcodes.ALOAD, BytecodeCompiler.RUNTIME_INDEX);
+        method.visitVarInsn(Opcodes.ALOAD, environment.getRuntimeIndex());
         method.visitMethodInsn(
                 Opcodes.INVOKEINTERFACE,
                 "gg/moonflower/molangcompiler/api/MolangEnvironment",

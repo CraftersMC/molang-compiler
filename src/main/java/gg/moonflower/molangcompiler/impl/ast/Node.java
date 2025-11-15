@@ -3,7 +3,7 @@ package gg.moonflower.molangcompiler.impl.ast;
 import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
-import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.Nullable;
 import org.objectweb.asm.Label;
@@ -72,7 +72,7 @@ public interface Node {
      * @throws MolangException If evaluation fails or the node cannot be statically evaluated
      * @since 3.2.0
      */
-    default MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+    default MolangValue evaluate(BytecodeEnvironment environment) throws MolangException {
         throw new MolangException("Cannot statically evaluate " + this.getClass().getSimpleName());
     }
 
@@ -88,28 +88,29 @@ public interface Node {
      * jump targets for break and continue statements.
      *
      * @param method        The method node to append bytecode instructions to
+     * @param compiler
      * @param environment   The bytecode compilation environment for variable allocation and tracking
      * @param breakLabel    Jump target for break statements, or null if not inside a loop
      * @param continueLabel Jump target for continue statements, or null if not inside a loop
      * @throws MolangException If bytecode generation fails due to syntax errors or unsupported operations
      */
-    default void writeBytecode(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+    default void writeBytecode(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
         throw new MolangException("Not implemented (" + this.getClass().getSimpleName() + " " + this + ")");
     }
 
-    default void writeBytecodeAsFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        writeBytecode(method, environment, breakLabel, continueLabel);
-        BytecodeCompiler.unwrapFloat(method);
+    default void writeBytecodeAsFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        writeBytecode(method, compiler, environment, breakLabel, continueLabel);
+        compiler.unwrapFloat(method);
     }
 
-    default void writeBytecodeAsTruncatedFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        writeBytecodeAsFloat(method, environment, breakLabel, continueLabel);
+    default void writeBytecodeAsTruncatedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        writeBytecodeAsFloat(method, compiler, environment, breakLabel, continueLabel);
         method.visitInsn(Opcodes.F2I);
         method.visitInsn(Opcodes.I2F);
     }
 
-    default void writeBytecodeAsRoundedFloat(MethodNode method, MolangBytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
-        writeBytecodeAsFloat(method, environment, breakLabel, continueLabel);
+    default void writeBytecodeAsRoundedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        writeBytecodeAsFloat(method, compiler, environment, breakLabel, continueLabel);
         method.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", MathOperation.ROUND.getName(), "(F)I", false);
         method.visitInsn(Opcodes.I2F);
     }

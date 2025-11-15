@@ -4,7 +4,7 @@ import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.impl.MolangUtil;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
-import gg.moonflower.molangcompiler.impl.compiler.MolangBytecodeEnvironment;
+import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
@@ -58,7 +58,7 @@ public record MathNode(MathOperation function, Node... arguments) implements Nod
     }
 
     @Override
-    public MolangValue evaluate(MolangBytecodeEnvironment environment) throws MolangException {
+    public MolangValue evaluate(BytecodeEnvironment environment) throws MolangException {
         float[] values = new float[this.arguments.length];
         for (int i = 0; i < values.length; i++) {
             values[i] = this.arguments[i].evaluate(environment).asFloat();
@@ -98,172 +98,172 @@ public record MathNode(MathOperation function, Node... arguments) implements Nod
     }
 
     @Override
-    public void writeBytecode(MethodNode method, MolangBytecodeEnvironment env, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+    public void writeBytecode(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment env, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
         switch (this.function) {
             // Single-argument Float
             case ABS -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", this.function.getName(), "(F)F", false);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             // Double-argument Float
             case MAX, MIN -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", this.function.getName(), "(FF)F", false);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             // Single-argument Double, converted to degrees
             case ACOS, ASIN, ATAN -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2D);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", this.function.getName(), "(D)D", false);
                 method.visitInsn(Opcodes.D2F);
-                BytecodeCompiler.writeFloatConst(method, RADIANS_TO_DEGREES);
+                compiler.writeFloatConst(method, RADIANS_TO_DEGREES);
                 method.visitInsn(Opcodes.FMUL);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             // Single-argument Double
             case CEIL, EXP, FLOOR, LN, SQRT -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2D);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", this.function.getName(), "(D)D", false);
                 method.visitInsn(Opcodes.D2F);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             // Single-argument Double, converted to radians
             case COS, SIN -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                BytecodeCompiler.writeFloatConst(method, DEGREES_TO_RADIANS);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                compiler.writeFloatConst(method, DEGREES_TO_RADIANS);
                 method.visitInsn(Opcodes.FMUL);
                 method.visitInsn(Opcodes.F2D);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", this.function.getName(), "(D)D", false);
                 method.visitInsn(Opcodes.D2F);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             // Double-argument Double
             case POW -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2D);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2D);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", this.function.getName(), "(DD)D", false);
                 method.visitInsn(Opcodes.D2F);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             // Convert to degrees
             case ATAN2 -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2D);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2D);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", this.function.getName(), "(DD)D", false);
                 method.visitInsn(Opcodes.D2F);
-                BytecodeCompiler.writeFloatConst(method, RADIANS_TO_DEGREES);
+                compiler.writeFloatConst(method, RADIANS_TO_DEGREES);
                 method.visitInsn(Opcodes.FMUL);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             // Single-argument Float->Int
             case ROUND -> {
-                this.arguments[0].writeBytecodeAsRoundedFloat(method, env, breakLabel, continueLabel);
-                BytecodeCompiler.wrapFloat(method);
+                this.arguments[0].writeBytecodeAsRoundedFloat(method, compiler, env, breakLabel, continueLabel);
+                compiler.wrapFloat(method);
             }
             // Operations
             case MOD -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.FREM);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             case PI -> {
-                BytecodeCompiler.writeConst(method, MolangValue.MATH_PI);
+                compiler.writeConst(method, MolangValue.MATH_PI);
             }
             case E -> {
-                BytecodeCompiler.writeConst(method, MolangValue.MATH_E);
+                compiler.writeConst(method, MolangValue.MATH_E);
             }
             case TRUNC -> {
-                this.arguments[0].writeBytecodeAsTruncatedFloat(method, env, breakLabel, continueLabel);
-                BytecodeCompiler.wrapFloat(method);
+                this.arguments[0].writeBytecodeAsTruncatedFloat(method, compiler, env, breakLabel, continueLabel);
+                compiler.wrapFloat(method);
             }
             // Custom
             case CLAMP -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                this.arguments[2].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                this.arguments[2].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "gg/moonflower/molangcompiler/impl/MolangUtil", "clamp", "(FFF)F", false);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             case DIE_ROLL -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2I);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                this.arguments[2].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                this.arguments[2].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "gg/moonflower/molangcompiler/impl/MolangUtil", "dieRoll", "(IFF)F", false);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             case DIE_ROLL_INTEGER -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2I);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2I);
-                this.arguments[2].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[2].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2I);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "gg/moonflower/molangcompiler/impl/MolangUtil", "dieRollInt", "(III)I", false);
                 method.visitInsn(Opcodes.I2F);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             case HERMITE_BLEND -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "gg/moonflower/molangcompiler/impl/MolangUtil", "hermiteBlend", "(F)F", false);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             case LERP -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                this.arguments[2].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                this.arguments[2].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "gg/moonflower/molangcompiler/impl/MolangUtil", "lerp", "(FFF)F", false);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             case LERPROTATE -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                this.arguments[2].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                this.arguments[2].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "gg/moonflower/molangcompiler/impl/MolangUtil", "lerpRotate", "(FFF)F", false);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             case MIN_ANGLE -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "gg/moonflower/molangcompiler/impl/MolangUtil", "wrapDegrees", "(F)F", false);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             case RANDOM -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "gg/moonflower/molangcompiler/impl/MolangUtil", "random", "(FF)F", false);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             case RANDOM_INTEGER -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2I);
                 method.visitInsn(Opcodes.I2F);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitInsn(Opcodes.F2I);
                 method.visitInsn(Opcodes.I2F);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "gg/moonflower/molangcompiler/impl/MolangUtil", "random", "(FF)F", false);
                 method.visitInsn(Opcodes.F2I);
                 method.visitInsn(Opcodes.I2F);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             case SIGN -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "java/lang/Math", "signum", "(F)F", false);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
             case TRIANGLE_WAVE -> {
-                this.arguments[0].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
-                this.arguments[1].writeBytecodeAsFloat(method, env, breakLabel, continueLabel);
+                this.arguments[0].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
+                this.arguments[1].writeBytecodeAsFloat(method, compiler, env, breakLabel, continueLabel);
                 method.visitMethodInsn(Opcodes.INVOKESTATIC, "gg/moonflower/molangcompiler/impl/MolangUtil", "triangleWave", "(FF)F", false);
-                BytecodeCompiler.wrapFloat(method);
+                compiler.wrapFloat(method);
             }
         }
     }
