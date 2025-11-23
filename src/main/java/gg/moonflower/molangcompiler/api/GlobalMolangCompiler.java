@@ -1,8 +1,5 @@
 package gg.moonflower.molangcompiler.api;
 
-import gg.moonflower.molangcompiler.impl.CompilerFlag;
-import gg.moonflower.molangcompiler.impl.CompilerFlags;
-
 import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
 

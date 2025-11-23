@@ -1,5 +1,6 @@
 package gg.moonflower.molangcompiler.impl;
 
+import gg.moonflower.molangcompiler.api.CompilerFlags;
 import gg.moonflower.molangcompiler.api.MolangCompiler;
 import gg.moonflower.molangcompiler.api.MolangExpression;
 import gg.moonflower.molangcompiler.api.MolangVersion;

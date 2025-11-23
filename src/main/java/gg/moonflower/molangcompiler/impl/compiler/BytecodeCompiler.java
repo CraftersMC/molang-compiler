@@ -1,11 +1,11 @@
 package gg.moonflower.molangcompiler.impl.compiler;
 
+import gg.moonflower.molangcompiler.api.CompilerFlag;
+import gg.moonflower.molangcompiler.api.CompilerFlags;
 import gg.moonflower.molangcompiler.api.MolangExpression;
 import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
 import gg.moonflower.molangcompiler.api.exception.MolangSyntaxException;
-import gg.moonflower.molangcompiler.impl.CompilerFlag;
-import gg.moonflower.molangcompiler.impl.CompilerFlags;
 import gg.moonflower.molangcompiler.impl.ast.BinaryOperation;
 import gg.moonflower.molangcompiler.impl.ast.Node;
 import gg.moonflower.molangcompiler.impl.ast.UnaryOperation;

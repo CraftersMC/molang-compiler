@@ -1,4 +1,4 @@
-package gg.moonflower.molangcompiler.impl;
+package gg.moonflower.molangcompiler.api;
 
 import java.util.EnumSet;
 import java.util.Objects;

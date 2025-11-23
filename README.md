@@ -97,8 +97,8 @@ This compiler supports various flags to customize compilation behavior. Compiler
 system instead of integer bit flags.
 
 ```java
-import gg.moonflower.molangcompiler.impl.CompilerFlag;
-import gg.moonflower.molangcompiler.impl.CompilerFlags;
+import gg.moonflower.molangcompiler.api.CompilerFlag;
+import gg.moonflower.molangcompiler.api.CompilerFlags;
 
 // Use default flags (includes OPTIMIZE)
 MolangCompiler compiler = MolangCompiler.create(CompilerFlags.DEFAULT);

@@ -1,4 +1,4 @@
-package gg.moonflower.molangcompiler.impl;
+package gg.moonflower.molangcompiler.api;
 
 public enum CompilerFlag {
     /**

@@ -1,7 +1,6 @@
 package gg.moonflower.molangcompiler.api;
 
 import gg.moonflower.molangcompiler.api.exception.UnsupportedMolangVersionException;
-import gg.moonflower.molangcompiler.impl.CompilerFlags;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompilerV12;
 import gg.moonflower.molangcompiler.impl.compiler.MolangParser;

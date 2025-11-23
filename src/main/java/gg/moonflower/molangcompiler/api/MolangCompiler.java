@@ -1,8 +1,6 @@
 package gg.moonflower.molangcompiler.api;
 
 import gg.moonflower.molangcompiler.api.exception.MolangSyntaxException;
-import gg.moonflower.molangcompiler.impl.CompilerFlag;
-import gg.moonflower.molangcompiler.impl.CompilerFlags;
 import gg.moonflower.molangcompiler.impl.MolangCompilerImpl;
 
 /**
