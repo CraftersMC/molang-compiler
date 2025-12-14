@@ -2,6 +2,7 @@ package gg.moonflower.molangcompiler.impl.ast;
 
 import gg.moonflower.molangcompiler.api.MolangValue;
 import gg.moonflower.molangcompiler.api.exception.MolangException;
+import gg.moonflower.molangcompiler.api.exception.MolangSyntaxException;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
@@ -47,5 +48,20 @@ public record CompoundNode(Node... nodes) implements Node {
         for (Node node : this.nodes) {
             node.writeBytecode(method, compiler, environment, breakLabel, continueLabel);
         }
+    }
+
+    @Override
+    public void writeBytecodeAsFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        throw new MolangSyntaxException("Cannot write a compound node as float");
+    }
+
+    @Override
+    public void writeBytecodeAsRoundedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        throw new MolangSyntaxException("Cannot write a compound node as float");
+    }
+
+    @Override
+    public void writeBytecodeAsTruncatedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        throw new MolangSyntaxException("Cannot write a compound node as float");
     }
 }

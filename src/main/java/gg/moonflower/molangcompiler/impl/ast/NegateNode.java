@@ -53,4 +53,31 @@ public record NegateNode(Node value) implements Node {
                 false
         );
     }
+
+    @Override
+    public void writeBytecodeAsFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        if (compiler.isOptimizationEnabled() && this.isConstant()) {
+            compiler.writeFloatConst(method, this.evaluate(environment).asFloat());
+            return;
+        }
+        writeBytecode(method, compiler, environment, breakLabel, continueLabel);
+    }
+
+    @Override
+    public void writeBytecodeAsTruncatedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        if (compiler.isOptimizationEnabled() && this.isConstant()) {
+            compiler.writeFloatConst(method, (int) this.evaluate(environment).asFloat());
+            return;
+        }
+        writeBytecode(method, compiler, environment, breakLabel, continueLabel);
+    }
+
+    @Override
+    public void writeBytecodeAsRoundedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        if (compiler.isOptimizationEnabled() && this.isConstant()) {
+            compiler.writeFloatConst(method, Math.round(this.evaluate(environment).asFloat()));
+            return;
+        }
+        writeBytecode(method, compiler, environment, breakLabel, continueLabel);
+    }
 }

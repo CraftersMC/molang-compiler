@@ -28,7 +28,10 @@ public final class MolangVersion {
     public static final MolangVersion LATEST;
 
     static {
-        LATEST = register(12,
+        register(12,
+                MolangParserV12::new,
+                BytecodeCompilerV12::new);
+        LATEST = register(13,
                 MolangParserV12::new,
                 BytecodeCompilerV12::new);
     }

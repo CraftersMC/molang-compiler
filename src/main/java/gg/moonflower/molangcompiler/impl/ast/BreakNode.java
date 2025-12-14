@@ -40,4 +40,19 @@ public record BreakNode() implements Node {
         }
         method.visitJumpInsn(Opcodes.GOTO, breakLabel);
     }
+
+    @Override
+    public void writeBytecodeAsFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        throw new MolangSyntaxException("Cannot write a break node as float");
+    }
+
+    @Override
+    public void writeBytecodeAsRoundedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        throw new MolangSyntaxException("Cannot write a break node as float");
+    }
+
+    @Override
+    public void writeBytecodeAsTruncatedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        throw new MolangSyntaxException("Cannot write a break node as float");
+    }
 }

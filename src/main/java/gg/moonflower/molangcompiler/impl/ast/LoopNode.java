@@ -1,6 +1,7 @@
 package gg.moonflower.molangcompiler.impl.ast;
 
 import gg.moonflower.molangcompiler.api.exception.MolangException;
+import gg.moonflower.molangcompiler.api.exception.MolangSyntaxException;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeCompiler;
 import gg.moonflower.molangcompiler.impl.compiler.BytecodeEnvironment;
 import org.jetbrains.annotations.ApiStatus;
@@ -77,5 +78,20 @@ public record LoopNode(Node iterations, Node body) implements Node {
         method.visitInsn(Opcodes.DUP2);
         method.visitJumpInsn(Opcodes.IF_ICMPGT, begin);
         method.visitLabel(end);
+    }
+
+    @Override
+    public void writeBytecodeAsFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        throw new MolangSyntaxException("Cannot write a loop node as float");
+    }
+
+    @Override
+    public void writeBytecodeAsRoundedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        throw new MolangSyntaxException("Cannot write a loop node as float");
+    }
+
+    @Override
+    public void writeBytecodeAsTruncatedFloat(MethodNode method, BytecodeCompiler compiler, BytecodeEnvironment environment, @Nullable Label breakLabel, @Nullable Label continueLabel) throws MolangException {
+        throw new MolangSyntaxException("Cannot write a loop node as float");
     }
 }
